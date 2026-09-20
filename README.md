@@ -4,7 +4,7 @@ Um jogo de cobrinha no estilo dos fliperamas antigos, com perguntas sobre bancos
 Coma frutas para crescer e pontuar, e, de tempos em tempos, responda a uma pergunta para ganhar um
 bônus. Feito para os estudantes do Ifes.
 
-**Versão atual:** 1.0.0 (aparece no topo do jogo)
+**Versão:** aparece no topo do jogo e na página de Releases
 
 ## Como abrir
 
@@ -102,12 +102,16 @@ automáticas das regras do jogo. A página mostra "ok" ou "falhou" para cada uma
 O jogo usa versionamento semântico (`MAIOR.MENOR.CORREÇÃO`). O número mora em um só lugar: a constante
 `VERSAO` no começo do script de `index.html`.
 
-Para publicar uma versão:
+A versão sobe sozinha a cada commit na `main` (inclusive na junção de um Pull Request). O GitHub Actions
+aumenta o número em `VERSAO`, faz um commit `chore: versão X.Y.Z [skip ci]`, cria a tag `vX.Y.Z` e publica a
+Release com o `.zip` do jogo. Como o número sobe:
 
-1. Mude `VERSAO` em `index.html` (por exemplo, para `"1.1.0"`) por meio de um Pull Request.
-2. Depois do merge, crie e envie a tag `v1.1.0` (o `v` mais o mesmo número).
-3. O GitHub Actions confere se a tag bate com `VERSAO` e cria a Release com o `.zip` do jogo. Se a tag e o
-   número forem diferentes, a publicação falha e nenhuma Release é criada.
+- mensagem com `BREAKING CHANGE` ou `tipo!:` (por exemplo `feat!:`): sobe o MAIOR (2.0.0);
+- mensagem que começa com `feat`: sobe o MENOR (1.1.0);
+- qualquer outro commit: sobe a CORREÇÃO (1.0.1).
+
+Não mude `VERSAO` à mão. Para escolher o tipo de aumento, use o título do Pull Request no formato
+`feat: ...`, `fix: ...` ou `feat!: ...`, porque é ele que aparece na mensagem da junção.
 
 ## Para quem desenvolve
 
