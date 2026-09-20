@@ -15,27 +15,40 @@ const VERSAO = "1.0.0";   // MAJOR.MINOR.PATCH, no leading "v"
 ## Release trigger
 
 - Workflow file: `.github/workflows/release.yml`.
-- Trigger: a pushed tag matching `v*.*.*`.
+- Trigger: every push to `main` (including a merged Pull Request).
 - Permission: `contents: write` only.
+- The version commit made by the workflow is skipped (`[skip ci]` and the bot actor), so it never re-triggers.
+- Runs are serialized with a concurrency group so two runs never bump the same version.
+
+## Automatic bump
+
+The bump is read from the head commit message on `main` (for a merged Pull Request, its title):
+
+| Message | Bump |
+|---------|------|
+| Contains `BREAKING CHANGE` or starts with `type!:` | MAJOR |
+| A line starts with `feat` | MINOR |
+| Anything else | PATCH |
 
 ## Workflow steps
 
 | Step | Rule | On failure |
 |------|------|------------|
-| Check out the tagged commit | Standard checkout | Workflow fails |
-| Read `VERSAO` from `index.html` | Extract the quoted value of `const VERSAO` | Workflow fails with a clear message |
-| Compare with the tag | Tag `vX.Y.Z` MUST equal `v` + `VERSAO` | Workflow fails; no Release is created |
+| Check out `main` | Full history | Workflow fails |
+| Read and bump `VERSAO` | Extract the value from `index.html`, apply the bump | Workflow fails; fails also if the new tag already exists |
+| Write `VERSAO` | Update `index.html` and verify the edit | Workflow fails |
+| Commit and tag | Commit `chore: versão X.Y.Z [skip ci]` to `main`, push tag `vX.Y.Z` | Workflow fails |
 | Package | Zip `index.html`, `perguntas.js`, `README.md` as `snake-vX.Y.Z.zip` | Workflow fails |
-| Publish | `gh release create <tag>` with generated notes and the zip attached | Workflow fails |
+| Publish | `gh release create` with generated notes and the zip attached | Workflow fails |
 
 The workflow uses only the `gh` CLI pre-installed on GitHub-hosted runners, with the built-in token; it uses
-no third-party actions beyond checkout.
+no third-party actions beyond checkout. `main` MUST NOT require pull requests for the workflow token, or the
+version commit cannot be pushed.
 
 ## Release procedure for maintainers
 
-1. Change `VERSAO` in `index.html` in a Pull Request; merge after review.
-2. Create and push the tag `vX.Y.Z` on the merge commit.
-3. The workflow publishes the Release; check that the zip opens and the game starts.
+Nobody edits `VERSAO` by hand. Merge a Pull Request whose title follows the table above; the workflow does the
+rest. Check that the Release zip opens and the game starts.
 
 ## Versioning rules
 

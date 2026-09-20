@@ -1,49 +1,94 @@
-name: Publicar versão
+name: Versão e publicação
 
-# Publica uma Release quando uma tag no formato vX.Y.Z é enviada.
-# A tag precisa ser igual à constante VERSAO do index.html.
+# A cada commit na main, aumenta a versão do jogo, cria a tag vX.Y.Z e publica a Release.
+# A versão mora só na constante VERSAO do index.html.
+#
+# Como o número sobe:
+#   - "BREAKING CHANGE" na mensagem, ou "tipo!:" (por exemplo "feat!:") -> MAIOR
+#   - mensagem com uma linha começando por "feat" -> MENOR
+#   - qualquer outro commit -> CORREÇÃO
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
 
 permissions:
   contents: write
 
+# Um commit por vez, para duas execuções nunca aumentarem a mesma versão.
+concurrency:
+  group: versao-e-publicacao
+  cancel-in-progress: false
+
 jobs:
   publicar:
+    # O commit de versão feito por este workflow não pode disparar outra rodada.
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar o código da tag
+      - name: Baixar o código da main
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Ler a versão do jogo
+      - name: Calcular a nova versão
         id: versao
+        env:
+          MENSAGEM: ${{ github.event.head_commit.message }}
         run: |
-          VERSAO=$(sed -nE 's/.*const VERSAO = "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' index.html | head -n 1)
-          if [ -z "$VERSAO" ]; then
+          ATUAL=$(sed -nE 's/.*const VERSAO = "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' index.html | head -n 1)
+          if [ -z "$ATUAL" ]; then
             echo "::error::Não encontrei a constante VERSAO no index.html."
             exit 1
           fi
-          echo "versao=$VERSAO" >> "$GITHUB_OUTPUT"
+          IFS=. read -r MAIOR MENOR CORRECAO <<< "$ATUAL"
 
-      - name: Conferir se a tag bate com a versão do jogo
-        env:
-          TAG: ${{ github.ref_name }}
-          VERSAO: ${{ steps.versao.outputs.versao }}
-        run: |
-          if [ "$TAG" != "v$VERSAO" ]; then
-            echo "::error::A tag $TAG é diferente da VERSAO do jogo (v$VERSAO). Nenhuma Release foi criada."
+          if printf '%s' "$MENSAGEM" | grep -qE 'BREAKING CHANGE|^[a-z]+(\([^)]*\))?!:'; then
+            TIPO=maior
+            MAIOR=$((MAIOR + 1)); MENOR=0; CORRECAO=0
+          elif printf '%s' "$MENSAGEM" | grep -qE '^feat'; then
+            TIPO=menor
+            MENOR=$((MENOR + 1)); CORRECAO=0
+          else
+            TIPO=correcao
+            CORRECAO=$((CORRECAO + 1))
+          fi
+          NOVA="$MAIOR.$MENOR.$CORRECAO"
+
+          if git rev-parse -q --verify "refs/tags/v$NOVA" > /dev/null; then
+            echo "::error::A tag v$NOVA já existe. Corrija a VERSAO no index.html."
             exit 1
           fi
+          echo "Versão $ATUAL -> $NOVA (aumento: $TIPO)"
+          echo "atual=$ATUAL" >> "$GITHUB_OUTPUT"
+          echo "nova=$NOVA" >> "$GITHUB_OUTPUT"
+
+      - name: Gravar a nova versão no index.html
+        env:
+          NOVA: ${{ steps.versao.outputs.nova }}
+        run: |
+          sed -i -E "s/(const VERSAO = \")[0-9]+\.[0-9]+\.[0-9]+(\")/\1$NOVA\2/" index.html
+          grep -q "const VERSAO = \"$NOVA\"" index.html
+
+      - name: Commitar a versão e criar a tag
+        env:
+          NOVA: ${{ steps.versao.outputs.nova }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "chore: versão $NOVA [skip ci]"
+          git tag -a "v$NOVA" -m "Snake v$NOVA"
+          git push origin HEAD:main
+          git push origin "v$NOVA"
 
       - name: Empacotar o jogo
         env:
-          TAG: ${{ github.ref_name }}
-        run: zip "snake-$TAG.zip" index.html perguntas.js README.md
+          NOVA: ${{ steps.versao.outputs.nova }}
+        run: zip "snake-v$NOVA.zip" index.html perguntas.js README.md
 
       - name: Criar a Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" "snake-$TAG.zip" --title "Snake $TAG" --generate-notes
+          NOVA: ${{ steps.versao.outputs.nova }}
+        run: gh release create "v$NOVA" "snake-v$NOVA.zip" --title "Snake v$NOVA" --generate-notes
