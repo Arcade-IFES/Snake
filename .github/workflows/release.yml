@@ -1,0 +1,49 @@
+name: Publicar versão
+
+# Publica uma Release quando uma tag no formato vX.Y.Z é enviada.
+# A tag precisa ser igual à constante VERSAO do index.html.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código da tag
+        uses: actions/checkout@v4
+
+      - name: Ler a versão do jogo
+        id: versao
+        run: |
+          VERSAO=$(sed -nE 's/.*const VERSAO = "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' index.html | head -n 1)
+          if [ -z "$VERSAO" ]; then
+            echo "::error::Não encontrei a constante VERSAO no index.html."
+            exit 1
+          fi
+          echo "versao=$VERSAO" >> "$GITHUB_OUTPUT"
+
+      - name: Conferir se a tag bate com a versão do jogo
+        env:
+          TAG: ${{ github.ref_name }}
+          VERSAO: ${{ steps.versao.outputs.versao }}
+        run: |
+          if [ "$TAG" != "v$VERSAO" ]; then
+            echo "::error::A tag $TAG é diferente da VERSAO do jogo (v$VERSAO). Nenhuma Release foi criada."
+            exit 1
+          fi
+
+      - name: Empacotar o jogo
+        env:
+          TAG: ${{ github.ref_name }}
+        run: zip "snake-$TAG.zip" index.html perguntas.js README.md
+
+      - name: Criar a Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" "snake-$TAG.zip" --title "Snake $TAG" --generate-notes

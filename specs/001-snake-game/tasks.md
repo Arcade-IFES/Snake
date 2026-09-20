@@ -40,13 +40,13 @@ armazenamento, áudio, entrada, desenho, máquina de estados, início.
 
 **Purpose**: Create the files and the section layout described in plan.md.
 
-- [ ] T001 Create `index.html` with `<!DOCTYPE html>`, `<html lang="pt-BR">`, a viewport meta tag that
+- [X] T001 Create `index.html` with `<!DOCTYPE html>`, `<html lang="pt-BR">`, a viewport meta tag that
   blocks zoom, an empty `<canvas id="tabuleiro">`, an inline `<style>` block, `<script src="perguntas.js">`
   followed by one inline `<script>` divided into the eight labeled comment sections in the order listed
   above, and the single line `const VERSAO = "1.0.0";` in the constantes section
-- [ ] T002 [P] Create `perguntas.js` containing only a header comment in Portuguese that explains the
+- [X] T002 [P] Create `perguntas.js` containing only a header comment in Portuguese that explains the
   `{ q, a, e, m }` format (first alternative always correct) and `const PERGUNTAS = [];`
-- [ ] T003 [P] Create `README.md` as a Portuguese skeleton with the headings: "O que é", "Como jogar",
+- [X] T003 [P] Create `README.md` as a Portuguese skeleton with the headings: "O que é", "Como jogar",
   "Como abrir", "Como editar as perguntas", "Créditos", "Versões"
 
 ---
@@ -57,29 +57,29 @@ armazenamento, áudio, entrada, desenho, máquina de estados, início.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Add every constant from data-model.md to the constantes section of `index.html`: 20 columns by
+- [X] T004 Add every constant from data-model.md to the constantes section of `index.html`: 20 columns by
   20 rows, start length 3, base speed 6 / +0.15 per fruit / cap 12 moves per second, absolute maximum 16 moves
   per second, 5 fruits per question round, 15 s question time, 10 fruit points, 50 answer bonus, combo +1 per
   5 fruits capped at x5, 3 s resume countdown, effect durations (slow 8 s, pass-through 8 s, double 10 s,
   shield 30 s or 1 use, turbo 8 s), direction queue size 2, swipe threshold 24 px, alternative limit 40
   characters, statement limit 160 characters
-- [ ] T005 Add to `index.html` the screen state machine with the states `TITULO`, `JOGANDO`, `PAUSADO`,
+- [X] T005 Add to `index.html` the screen state machine with the states `TITULO`, `JOGANDO`, `PAUSADO`,
   `CONTAGEM`, `PERGUNTA`, `RESULTADO`, `FIM`, `INICIAIS`, `RANKING`, a `mudarEstado(novo)` function, and one
   hidden HTML overlay container per screen, shown only for the current state
-- [ ] T006 Add the cabinet-style CSS to `index.html`: dark high-contrast palette, system monospace font stack
+- [X] T006 Add the cabinet-style CSS to `index.html`: dark high-contrast palette, system monospace font stack
   (no external fonts), a framed board area, responsive layout that never scrolls horizontally, and the
   message "Gire o aparelho ou aumente a janela." shown instead of the game below the smallest supported size
-- [ ] T007 Add `ajustarTabuleiro()` to the desenho section of `index.html`: cell size is
+- [X] T007 Add `ajustarTabuleiro()` to the desenho section of `index.html`: cell size is
   `floor(min(largura, altura) / 20)` of the free area so cells stay square, canvas backing store scaled by
   `devicePixelRatio`, redrawn on resize and rotation
-- [ ] T008 Add the fixed-step game loop to the máquina de estados section of `index.html`, using
+- [X] T008 Add the fixed-step game loop to the máquina de estados section of `index.html`, using
   `requestAnimationFrame` and an accumulator; elapsed time per frame is clamped to 100 ms and is added only
   while the state is `JOGANDO`
-- [ ] T009 Add the pure helpers to the lógica pura section of `index.html`: `velocidadeBase(frutas)` as
+- [X] T009 Add the pure helpers to the lógica pura section of `index.html`: `velocidadeBase(frutas)` as
   `min(6 + 0.15 * frutas, 12)`, `limitarVelocidade(v)` clamping to 16, `multiplicador(combo)` as
   `min(1 + floor(combo / 5), 5)`, `embaralhar(lista)` (Fisher-Yates), and `celulaLivre(ocupadas)` returning a
   random free cell or `null` when the grid is full
-- [ ] T010 Add the `#teste` self-test harness to `index.html`: when `location.hash === "#teste"`, run
+- [X] T010 Add the `#teste` self-test harness to `index.html`: when `location.hash === "#teste"`, run
   registered `testar(nome, funcao)` checks after load, print "ok" or "falhou" plus the name to the console and
   to a page panel, and do not start the game UI; add checks for `velocidadeBase`, `limitarVelocidade` (never
   above 16), `multiplicador`, `embaralhar`, and `celulaLivre`
@@ -96,32 +96,32 @@ armazenamento, áudio, entrada, desenho, máquina de estados, início.
 
 ### Self-test for User Story 1
 
-- [ ] T011 [US1] Add self-test checks in `index.html` for: initial match state (length 3, direction right,
+- [X] T011 [US1] Add self-test checks in `index.html` for: initial match state (length 3, direction right,
   score 0, combo x1, no effect), one move per tick, growth on a regular fruit, wall collision, body collision,
   the no-reverse rule (opposite direction ignored, two turns in one tick apply one turn per tick with a queue
   of at most 2), fruits never placed on the snake, and the win when the grid is full
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Add `criarPartida()` to the lógica pura section of `index.html`: snake of length 3 moving
+- [X] T012 [US1] Add `criarPartida()` to the lógica pura section of `index.html`: snake of length 3 moving
   `DIREITA`, one regular fruit on a free cell, score 0, `frutasComidas` 0, combo 0 (multiplier x1), no effect,
   `ganhou` false
-- [ ] T013 [US1] Add direction handling to `index.html`: `pedirDirecao(partida, dir)` pushes to a queue of at
+- [X] T013 [US1] Add direction handling to `index.html`: `pedirDirecao(partida, dir)` pushes to a queue of at
   most 2 and drops any direction opposite to the last queued or applied one; each tick applies at most one
   queued direction (FR-006)
-- [ ] T014 [US1] Add `passo(partida)` to the lógica pura section of `index.html`: move the head one cell;
+- [X] T014 [US1] Add `passo(partida)` to the lógica pura section of `index.html`: move the head one cell;
   detect wall and body collision (game over); on a regular fruit grow by one segment, add
   `10 * multiplicador(combo)` points, increment `frutasComidas` and `combo`, and place a new fruit with
   `celulaLivre`; if no free cell exists set `ganhou` and end the match (FR-007)
-- [ ] T015 [US1] Wire the loop in `index.html` so each tick interval is `1 / limitarVelocidade(
+- [X] T015 [US1] Wire the loop in `index.html` so each tick interval is `1 / limitarVelocidade(
   velocidadeBase(frutasComidas))` seconds and `passo` runs once per elapsed interval
-- [ ] T016 [US1] Add board drawing to the desenho section of `index.html`: walls or border, snake (distinct
+- [X] T016 [US1] Add board drawing to the desenho section of `index.html`: walls or border, snake (distinct
   head), and regular fruit as square cells with a pixel arcade look; redraw every frame
-- [ ] T017 [US1] Add keyboard steering to the entrada section of `index.html`: arrow keys and W, A, S, D call
+- [X] T017 [US1] Add keyboard steering to the entrada section of `index.html`: arrow keys and W, A, S, D call
   `pedirDirecao`; prevent default scrolling for arrow keys during play
-- [ ] T018 [US1] Add the title screen to `index.html` with the title "Snake", a "Jogar" button that starts a
+- [X] T018 [US1] Add the title screen to `index.html` with the title "Snake", a "Jogar" button that starts a
   match, and the arcade cabinet look; "Jogar" is enabled by default here (bank check comes in US2)
-- [ ] T019 [US1] Add the game-over screen to `index.html` showing "Fim de jogo" (or "Você venceu!" when
+- [X] T019 [US1] Add the game-over screen to `index.html` showing "Fim de jogo" (or "Você venceu!" when
   `ganhou`), the final score with the label "Pontos", the length with the label "Tamanho", and the buttons
   "Jogar de novo" and "Menu"
 
@@ -143,17 +143,17 @@ non-empty short explanation; `m` the subject name. Content is for Ifes students,
 exams or textbooks (Principle VIII). These tasks edit one file, so run them one at a time; the whole stream is
 independent of the `index.html` tasks below.
 
-- [ ] T020 [US2] Add 10 questions with `m: "Português"` to `perguntas.js`
-- [ ] T021 [US2] Add 10 questions with `m: "Matemática"` to `perguntas.js`
-- [ ] T022 [US2] Add 10 questions with `m: "História"` to `perguntas.js`
-- [ ] T023 [US2] Add 10 questions with `m: "Geografia"` to `perguntas.js`
-- [ ] T024 [US2] Add 10 questions with `m: "Ciências"` to `perguntas.js`
-- [ ] T025 [US2] Add 10 questions with `m: "Conhecimentos gerais"` to `perguntas.js`, then confirm the file
+- [X] T020 [US2] Add 10 questions with `m: "Português"` to `perguntas.js`
+- [X] T021 [US2] Add 10 questions with `m: "Matemática"` to `perguntas.js`
+- [X] T022 [US2] Add 10 questions with `m: "História"` to `perguntas.js`
+- [X] T023 [US2] Add 10 questions with `m: "Geografia"` to `perguntas.js`
+- [X] T024 [US2] Add 10 questions with `m: "Ciências"` to `perguntas.js`
+- [X] T025 [US2] Add 10 questions with `m: "Conhecimentos gerais"` to `perguntas.js`, then confirm the file
   holds at least 60 questions across at least 5 subjects
 
 ### Self-test for User Story 2
 
-- [ ] T026 [US2] Add self-test checks in `index.html` for: `validarPergunta` (accepts a valid entry; rejects
+- [X] T026 [US2] Add self-test checks in `index.html` for: `validarPergunta` (accepts a valid entry; rejects
   `q` over 160 characters, fewer than 4 alternatives, an alternative over 40 characters, an empty `e` or `m`),
   question drawing (no repeats until the bank is used up, subjects balanced, restarts from the full valid bank),
   four alternatives shown with the correct one tracked after shuffling, upgrade order over 8 answers ("Câmera
@@ -162,39 +162,40 @@ independent of the `index.html` tasks below.
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Add `validarPergunta(p)` and `prepararBanco()` to the lógica pura section of `index.html`:
+- [X] T027 [US2] Add `validarPergunta(p)` and `prepararBanco()` to the lógica pura section of `index.html`:
   read `PERGUNTAS` safely (a missing file leaves it undefined), keep only valid entries, log skipped indexes
   to the console
-- [ ] T028 [US2] Add the bank warning to `index.html`: if no valid question exists (file missing, empty, or
+- [X] T028 [US2] Add the bank warning to `index.html`: if no valid question exists (file missing, empty, or
   all invalid, also when the script `onerror` fires), the title screen shows "Perguntas não encontradas.
   Verifique o arquivo perguntas.js." and "Jogar" is disabled; the game must not crash
-- [ ] T029 [US2] Add `sortearPergunta(partida)` to the lógica pura section of `index.html`: per-subject
+- [X] T029 [US2] Add `sortearPergunta(partida)` to the lógica pura section of `index.html`: per-subject
   shuffled queues drawn in round-robin, no repeat until every valid question was used, then rebuild; return
   the correct alternative plus 3 random wrong ones, shuffled, with the correct index tracked
-- [ ] T030 [US2] Add the "?" fruit to `index.html`: after every 5th regular fruit spawn one special fruit on a
+- [X] T030 [US2] Add the "?" fruit to `index.html`: after every 5th regular fruit spawn one special fruit on a
   free cell, at most one at a time, kept until eaten, drawn with a distinct look and a "?" mark; it neither
   grows the snake nor awards fruit points (FR-017, FR-018); if the head would hit a wall or body on the same
   move the collision wins
-- [ ] T031 [US2] Add the effects module to the lógica pura section of `index.html`: `aplicarEfeito(partida,
+- [X] T031 [US2] Add the effects module to the lógica pura section of `index.html`: `aplicarEfeito(partida,
   efeito)` (replaces the current one), effects "Câmera lenta" (speed x0.5, 8 s), "Atravessar o corpo" (body
   is not fatal for 8 s, walls stay fatal; if time ends while the head is on the body the effect stays at "0 s"
   until the head leaves it), "Pontos em dobro" (all points doubled, 10 s), "Escudo" (cancels the next one
   collision, the snake does not move that tick, ends when used or after 30 s), and the downgrade "Turbo"
   (speed x1.4, 8 s); speed is always passed through `limitarVelocidade`; durations decrease only in
   `JOGANDO`
-- [ ] T032 [US2] Add the upgrade cycle to `index.html`: a per-match position over the fixed order "Câmera
+- [X] T032 [US2] Add the upgrade cycle to `index.html`: a per-match position over the fixed order "Câmera
   lenta", "Atravessar o corpo", "Pontos em dobro", "Escudo", repeating, restarting each match
-- [ ] T033 [US2] Add the question screen to `index.html` for state `PERGUNTA`: statement, four alternatives
+- [X] T033 [US2] Add the question screen to `index.html` for state `PERGUNTA`: statement, four alternatives
   labeled 1 to 4, a visible countdown from 15 s that runs only in this state, answering by keys 1 to 4 or by
   tapping an alternative, all other keys including P and Esc ignored
-- [ ] T034 [US2] Add the result screen to `index.html` for state `RESULTADO`: the message "Resposta
+- [X] T034 [US2] Add the result screen to `index.html` for state `RESULTADO`: the message "Resposta
   correta!", "Resposta errada!", or "Tempo esgotado!", the correct alternative highlighted, and the
-  explanation `e`; continue with any answer key, Enter, Space, or a "Continuar" button
-- [ ] T035 [US2] Add answer handling to `index.html`: correct gives 50 bonus points (not multiplied by the
+  explanation `e`; continue with Enter, Space, or a "Continuar" button, only after 0.6 s (answer keys 1 to 4
+  do not continue, so a double press cannot skip the explanation)
+- [X] T035 [US2] Add answer handling to `index.html`: correct gives 50 bonus points (not multiplied by the
   combo), counts as one consecutive fruit, and applies the next upgrade; wrong or timeout resets the combo to
   x1 and applies "Turbo"; neither can end the match; each result is stored as a question record with
   `CERTA`, `ERRADA`, or `TEMPO` (FR-020 to FR-024)
-- [ ] T036 [US2] Add the resume countdown to `index.html`: state `CONTAGEM` shows 3, 2, 1 and only then
+- [X] T036 [US2] Add the resume countdown to `index.html`: state `CONTAGEM` shows 3, 2, 1 and only then
   returns to `JOGANDO`; use it after every question result
 
 **Checkpoint**: A match with question rounds plays end to end and never ends because of an answer.
@@ -207,16 +208,16 @@ independent of the `index.html` tasks below.
 
 **Independent Test**: Quickstart scenario D.
 
-- [ ] T037 [US3] Add the HUD markup and CSS to `index.html` with the labels "Pontos", "Combo", "Tamanho",
+- [X] T037 [US3] Add the HUD markup and CSS to `index.html` with the labels "Pontos", "Combo", "Tamanho",
   "Efeito" and the version text `"v" + VERSAO` (the constant from T001 is the only place the number is
   written), visible together with the board on desktop and phone
-- [ ] T038 [US3] Add HUD updates to `index.html`: score, combo as the multiplier (for example "x2"), and
+- [X] T038 [US3] Add HUD updates to `index.html`: score, combo as the multiplier (for example "x2"), and
   length update in the same tick as the change; "Efeito" shows "Nenhum" when idle, otherwise the effect name
   and remaining seconds, or "1 uso" for the shield
-- [ ] T039 [US3] Add effect announcements to `index.html`: show the effect name on screen when it starts, with
+- [X] T039 [US3] Add effect announcements to `index.html`: show the effect name on screen when it starts, with
   a visually distinct style for upgrades and for the downgrade (for example different colors plus an icon
   character, not color alone)
-- [ ] T040 [US3] Show `"v" + VERSAO` also on the title screen of `index.html`
+- [X] T040 [US3] Show `"v" + VERSAO` also on the title screen of `index.html`
 
 **Checkpoint**: Every value in scenario D is visible and updates correctly.
 
@@ -228,14 +229,14 @@ independent of the `index.html` tasks below.
 
 **Independent Test**: Quickstart scenario H.
 
-- [ ] T041 [US7] Add self-test checks in `index.html` that the play-time delta is not applied in `PAUSADO`,
+- [X] T041 [US7] Add self-test checks in `index.html` that the play-time delta is not applied in `PAUSADO`,
   `CONTAGEM`, `PERGUNTA`, `RESULTADO` (effect timers and snake position unchanged)
-- [ ] T042 [US7] Add pause to `index.html`: P or Esc toggles `JOGANDO` and `PAUSADO`, the pause screen shows
+- [X] T042 [US7] Add pause to `index.html`: P or Esc toggles `JOGANDO` and `PAUSADO`, the pause screen shows
   "Pausado" and a "Continuar" button, resuming goes through the `CONTAGEM` 3-2-1; P and Esc do nothing in
   `PERGUNTA`
-- [ ] T043 [US7] Add `visibilitychange` and `blur` handling to `index.html` so a match in `JOGANDO` pauses
+- [X] T043 [US7] Add `visibilitychange` and `blur` handling to `index.html` so a match in `JOGANDO` pauses
   automatically and resumes only through the pause screen
-- [ ] T044 [US7] Add an on-screen pause button to `index.html`, shown on touch devices during play, that
+- [X] T044 [US7] Add an on-screen pause button to `index.html`, shown on touch devices during play, that
   toggles pause like P
 
 **Checkpoint**: Pause freezes the snake and all timers.
@@ -248,15 +249,15 @@ independent of the `index.html` tasks below.
 
 **Independent Test**: Quickstart scenario G (the pause button part depends on Phase 6).
 
-- [ ] T045 [US6] Add swipe steering to the entrada section of `index.html`: `touchstart` and `touchend` on the
+- [X] T045 [US6] Add swipe steering to the entrada section of `index.html`: `touchstart` and `touchend` on the
   board, dominant axis, ignore moves under 24 px, then call `pedirDirecao`
-- [ ] T046 [US6] Add `touch-action: none` on the board and scroll/zoom prevention to `index.html` so swiping
+- [X] T046 [US6] Add `touch-action: none` on the board and scroll/zoom prevention to `index.html` so swiping
   never scrolls or zooms the page (FR-016)
-- [ ] T047 [US6] Add on-screen direction buttons to `index.html` using `pointerdown`, shown on touch devices
+- [X] T047 [US6] Add on-screen direction buttons to `index.html` using `pointerdown`, shown on touch devices
   and hidden when no touch is available, laid out so they never cover the board
-- [ ] T048 [US6] Make the question and result screens usable by touch in `index.html`: each alternative and the
+- [X] T048 [US6] Make the question and result screens usable by touch in `index.html`: each alternative and the
   "Continuar" button is a large tap target, the statement fits without scrolling on a phone
-- [ ] T049 [US6] Verify and fix the layout in `index.html` for portrait and landscape: whole game visible, no
+- [X] T049 [US6] Verify and fix the layout in `index.html` for portrait and landscape: whole game visible, no
   horizontal scroll, square cells, HUD readable; check rotation redraws the board
 
 **Checkpoint**: A whole match, including a question round, plays without a keyboard.
@@ -271,30 +272,30 @@ independent of the `index.html` tasks below.
 
 ### Self-test for User Story 4
 
-- [ ] T050 [US4] Add self-test checks in `index.html` for: `qualifica` (score greater than 0 and either fewer
+- [X] T050 [US4] Add self-test checks in `index.html` for: `qualifica` (score greater than 0 and either fewer
   than 10 entries or greater than the lowest), insertion order (points descending, then older first), the
   10-entry cut, validation on load (initials "Exactly 3 letters A-Z", points "Integer greater than 0",
   timestamp integer; bad entries dropped, bad JSON gives an empty list)
 
 ### Implementation for User Story 4
 
-- [ ] T051 [US4] Add the four storage functions to the armazenamento section of `index.html`:
+- [X] T051 [US4] Add the four storage functions to the armazenamento section of `index.html`:
   `carregarRanking()`, `salvarRanking(lista)`, `carregarMudo()`, `salvarMudo(valor)` using keys
   `snake.ranking` and `snake.mudo`, every access in try/catch, exactly as in
   contracts/armazenamento.md, plus a start-up write test that sets `armazenamentoOk`
-- [ ] T052 [US4] Add the review to the game-over screen of `index.html` under the heading "Revisão das
+- [X] T052 [US4] Add the review to the game-over screen of `index.html` under the heading "Revisão das
   perguntas": each `ERRADA` or `TEMPO` record with its statement, the correct answer, and the explanation;
   "Você acertou todas as perguntas!" when none were missed; "Nenhuma pergunta respondida nesta partida." when
   no question was asked
-- [ ] T053 [US4] Add ranking rules to the lógica pura section of `index.html`: `qualifica(pontos, lista)` and
+- [X] T053 [US4] Add ranking rules to the lógica pura section of `index.html`: `qualifica(pontos, lista)` and
   `inserirNoRanking(lista, entrada)` (sort by points descending then timestamp ascending, cut to 10)
-- [ ] T054 [US4] Add the initials prompt to `index.html` in state `INICIAIS`: "Novo recorde!" and "Digite
+- [X] T054 [US4] Add the initials prompt to `index.html` in state `INICIAIS`: "Novo recorde!" and "Digite
   suas iniciais", exactly three letters A to Z converted to upper case, confirm enabled only with three
   letters, "Pular" to skip; save with `salvarRanking` and then show the ranking with the new entry
   highlighted
-- [ ] T055 [US4] Add the ranking screen to `index.html` in state `RANKING`: reachable from the title screen
+- [X] T055 [US4] Add the ranking screen to `index.html` in state `RANKING`: reachable from the title screen
   with "Ranking", top 10 highest first, "Nenhum recorde ainda." when empty, a way back to the title
-- [ ] T056 [US4] Add the storage failure path to `index.html`: when `armazenamentoOk` is false or
+- [X] T056 [US4] Add the storage failure path to `index.html`: when `armazenamentoOk` is false or
   `salvarRanking` returns false, show "Ranking indisponível neste navegador." instead of the initials prompt,
   and never crash
 
@@ -308,14 +309,14 @@ independent of the `index.html` tasks below.
 
 **Independent Test**: Quickstart scenario F.
 
-- [ ] T057 [US5] Add the audio engine to the áudio section of `index.html`: a lazily created `AudioContext`,
+- [X] T057 [US5] Add the audio engine to the áudio section of `index.html`: a lazily created `AudioContext`,
   one master `GainNode`, resumed on the first key press or tap, silent fallback when audio is blocked or
   unsupported; no audio files
-- [ ] T058 [US5] Add six distinct oscillator sound effects to `index.html`: eating a fruit, eating the "?"
+- [X] T058 [US5] Add six distinct oscillator sound effects to `index.html`: eating a fruit, eating the "?"
   fruit, correct answer, wrong answer or timeout, effect start, game over; call them from the matching events
-- [ ] T059 [US5] Add the background music loop to `index.html`: a looping melody scheduled with a 100 ms
+- [X] T059 [US5] Add the background music loop to `index.html`: a looping melody scheduled with a 100 ms
   look-ahead, started with a match and stopped at game over and on the title screen
-- [ ] T060 [US5] Add mute to `index.html`: the M key and an on-screen button labeled "Som: ligado" or "Som:
+- [X] T060 [US5] Add mute to `index.html`: the M key and an on-screen button labeled "Som: ligado" or "Som:
   desligado" set the master gain to zero or back; read the initial value with `carregarMudo()` and write
   every change with `salvarMudo()`
 
@@ -327,23 +328,25 @@ independent of the `index.html` tasks below.
 
 **Purpose**: Documentation, release automation, and the quality gates of Principle XI.
 
-- [ ] T061 [P] Write the full Portuguese `README.md`: what the game is, how to play (keyboard and touch
+- [X] T061 [P] Write the full Portuguese `README.md`: what the game is, how to play (keyboard and touch
   controls, question rounds, effects, scoring), how to open it by double-clicking, how to edit
   `perguntas.js` with the format and limits from contracts/perguntas.md, credits for questions, art, and
   music (Principle VIII), the version shown in the game, and how a release is published
-- [ ] T062 [P] Create `.github/workflows/release.yml` following contracts/versao-e-release.md: trigger on
+- [X] T062 [P] Create `.github/workflows/release.yml` following contracts/versao-e-release.md: trigger on
   tags `v*.*.*`, `contents: write` only, read `VERSAO` from `index.html`, fail if the tag differs from `v` +
   `VERSAO`, zip `index.html`, `perguntas.js`, and `README.md` as `snake-vX.Y.Z.zip`, and publish with
   `gh release create` and generated notes, using only checkout and the pre-installed `gh` CLI
-- [ ] T063 Review every player-visible string in `index.html`, `perguntas.js`, and `README.md` for pt-BR
+- [X] T063 Review every player-visible string in `index.html`, `perguntas.js`, and `README.md` for pt-BR
   spelling, accents, and consistency with the strings quoted in spec.md; confirm all code comments and
   identifiers are Portuguese
-- [ ] T064 Review `index.html` for performance: no allocation-heavy work inside the frame loop, a smooth
+- [X] T064 Review `index.html` for performance: no allocation-heavy work inside the frame loop, a smooth
   frame rate on a phone-sized viewport
-- [ ] T065 Open `index.html#teste` and fix any "falhou" line until every check reports "ok"
+- [X] T065 Open `index.html#teste` and fix any "falhou" line until every check reports "ok"
 - [ ] T066 Run every scenario A to J of quickstart.md on a desktop browser and on a phone, and fix defects
-  found; record any deviation in the pull request description
-- [ ] T067 Verify offline behavior and the failure modes of quickstart.md scenario I (renamed
+  found; record any deviation in the pull request description. **Pending**: A to E, G, H, and I were checked
+  with a scripted headless Chrome (desktop and phone emulation). Still to do by a person: listening to the
+  sound and music (F), playing on a real phone (G), and the release run on GitHub (J)
+- [X] T067 Verify offline behavior and the failure modes of quickstart.md scenario I (renamed
   `perguntas.js`, blocked storage, blocked audio)
 
 ---
@@ -428,3 +431,9 @@ Join: T035 needs at least the shipped questions from Stream B to run a real ques
 - Commit after each task or logical group, on branch `001-snake-game`.
 - Stop at any checkpoint to validate the story on its own.
 - Do not add frameworks, build steps, external fonts, or audio files: the constitution forbids them.
+
+## Phase 11: Convergence
+
+- [X] T068 Play the sound effect `"efeito"` (already defined in `tocarSom`) in `index.html` every time an upgrade or the "Turbo" downgrade starts, for example inside `anunciarEfeitoAtual()`, so the effect-start sound required by FR-047 is heard per FR-047 (partial)
+- [X] T069 Resolve the 3-2-1 countdown shown before the first move of a new match in `iniciarPartida()` of `index.html`: spec.md only asks for the countdown after pause and after a question result (FR-015), so either document it in spec.md and README.md or remove it per FR-002 and FR-015 (unrequested)
+- [X] T070 Resolve the "Pausar" button that `index.html` shows on desktop as well as on phones: S-III and T044 only require it on phones, so either hide it when `body.toque` is not set or note the desktop button in spec.md and README.md per Constitution S-III (unrequested)

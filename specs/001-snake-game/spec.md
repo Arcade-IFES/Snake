@@ -74,8 +74,10 @@ continues after each.
    downgrade named "Turbo" is active.
 7. **Given** the 15-second countdown reaches zero, **When** no answer was submitted, **Then** the game behaves
    as for a wrong answer, and the screen shows "Tempo esgotado!" instead of "Resposta errada!".
-8. **Given** the result screen is shown, **When** the player presses any answer key, Enter, Space, or taps
-   "Continuar", **Then** the game resumes and the snake moves again only after a short 3-2-1 resume countdown.
+8. **Given** the result screen is shown, **When** the player presses Enter or Space, or taps "Continuar", after
+   the first 0.6 seconds, **Then** the game resumes and the snake moves again only after a short 3-2-1 resume
+   countdown. Answer keys 1 to 4 do not continue, and any input in the first 0.6 seconds is ignored, so a
+   double press on an answer cannot skip the explanation.
 9. **Given** a question round happens, **When** it ends in any way, **Then** the match is still running and no
    game over occurs because of the answer.
 10. **Given** the question bank has enough questions, **When** questions are drawn during one match, **Then** no
@@ -283,11 +285,12 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
 - **FR-011**: On desktop, the player MUST be able to steer with the arrow keys and with W, A, S, D.
 - **FR-012**: On phones, the player MUST be able to steer by swiping on the play area (minimum swipe distance
   of 24 pixels) and by on-screen direction buttons.
-- **FR-013**: P or Esc MUST pause and resume a match; phones MUST also offer an on-screen pause button.
+- **FR-013**: P or Esc MUST pause and resume a match; phones MUST also offer an on-screen pause button. The
+  same "Pausar" button is also shown on desktop.
 - **FR-014**: The game MUST pause automatically when the page loses focus or becomes hidden during a match,
   and MUST resume only through the pause screen.
 - **FR-015**: Resuming from pause and from a question result MUST be followed by a 3-2-1 countdown before the
-  snake moves again.
+  snake moves again. The same countdown is also shown before the first move of a new match.
 - **FR-016**: On touch devices, swiping on the play area MUST NOT scroll or zoom the page.
 
 **Question round**

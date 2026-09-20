@@ -1,3 +1,15 @@
+<!--
+Sync Impact Report
+Version change: 2.1.0 -> 3.0.0 (MAJOR: rule S-VII redefined; the subject area changed from general knowledge
+  and high-school content to databases only)
+Modified principles: S-VII "Subject Area and Audience" (same title; new subject rules and a rationale)
+Added sections: none
+Removed sections: none
+Deferred TODOs: none. Part I is unchanged. Dependent documents that still describe the old subject area
+  (spec.md FR-054, spec.md assumptions, tasks T020 to T025) are outside this command and are listed as
+  Next Actions.
+-->
+
 # Arcade-IFES Games Constitution
 
 ## Part I — Arcade-IFES Common Rules
@@ -128,9 +140,15 @@ its cap, and the bonus value. The current score and combo MUST be visible during
 MUST feed the ranking required by Principle V.
 
 ### S-VII. Subject Area and Audience
-The question content MUST be general knowledge and high-school subjects, written for students of Ifes. It
-MUST follow the shared `perguntas.js` format from Principle VI, MUST fit the four-alternative layout, and MUST
-keep each alternative short enough to be read on a phone within the question timer. The end-of-match summary
-MUST list the questions the player missed, with their explanations, as required by Principle VII.
+The question content MUST be about databases only, from beginner to advanced, written for students of Ifes.
+Every question MUST belong to a database topic, and the subject `m` of each question MUST name that topic.
+The bank MUST cover the whole range: beginner topics (such as fundamentals, data modeling, and basic SQL) and
+advanced topics (such as advanced SQL, transactions and indexes, and NoSQL and architecture). The bank MUST
+NOT contain questions outside databases. It MUST follow the shared `perguntas.js` format from Principle VI,
+MUST fit the four-alternative layout, and MUST keep each alternative short enough to be read on a phone within
+the question timer. The end-of-match summary MUST list the questions the player missed, with their
+explanations, as required by Principle VII.
 
-**Version**: 2.1.0 | **Ratified**: 2026-09-19 | **Last Amended**: 2026-09-20
+Rationale: the game supports the databases course, so every question round reinforces course content.
+
+**Version**: 3.0.0 | **Ratified**: 2026-09-19 | **Last Amended**: 2026-09-20
