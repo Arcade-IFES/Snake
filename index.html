@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#07070f">
+<title>Snake — Fliperama Ifes</title>
+<style>
+  :root {
+    --fundo: #07070f;
+    --painel: #12122a;
+    --borda: #39ff88;
+    --texto: #e8ffe8;
+    --suave: #9ab5a4;
+    --ouro: #ffd23f;
+    --bom: #39ff88;
+    --ruim: #ff5470;
+    --azul: #4dd2ff;
+    --fonte: "Courier New", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--fonte);
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #fliperama {
+    position: relative;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "topo" "hud" "moldura" "controles";
+    gap: 6px;
+  }
+  #topo { grid-area: topo; display: flex; align-items: center; gap: 8px; }
+  #topo h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    letter-spacing: 0.2em;
+    color: var(--borda);
+    text-shadow: 0 0 8px rgba(57, 255, 136, 0.6);
+  }
+  #versao { color: var(--suave); font-size: 0.8rem; }
+  #topo .espaco { flex: 1; }
+  .mini {
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--texto);
+    background: var(--painel);
+    border: 2px solid var(--borda);
+    border-radius: 6px;
+    padding: 6px 10px;
+    min-height: 36px;
+    cursor: pointer;
+  }
+  #hud {
+    grid-area: hud;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .medidor {
+    background: var(--painel);
+    border: 2px solid #26264d;
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: center;
+    min-width: 0;
+  }
+  .medidor small { display: block; color: var(--suave); font-size: 0.65rem; text-transform: uppercase; }
+  .medidor b { display: block; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hud-efeito { font-size: 0.85rem; white-space: normal; line-height: 1.15; }
+  #hud-efeito.sobe { color: var(--bom); }
+  #hud-efeito.desce { color: var(--ruim); }
+  #moldura {
+    grid-area: moldura;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+  }
+  #area {
+    position: relative;
+    border: 4px solid var(--borda);
+    border-radius: 4px;
+    box-shadow: 0 0 18px rgba(57, 255, 136, 0.35), inset 0 0 12px rgba(0, 0, 0, 0.8);
+    background: #000;
+    touch-action: none;
+    line-height: 0;
+  }
+  #tabuleiro { display: block; touch-action: none; }
+  #aviso {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    line-height: 1.2;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--borda);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  #aviso.sobe { color: var(--bom); border-color: var(--bom); }
+  #aviso.desce { color: var(--ruim); border-color: var(--ruim); }
+  #controles {
+    grid-area: controles;
+    display: none;
+    justify-content: center;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  body.toque #controles { display: flex; }
+  #direcionais {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(2, 54px);
+    gap: 6px;
+    grid-template-areas: ". cima ." "esq baixo dir";
+  }
+  .dir {
+    font: inherit;
+    font-size: 1.5rem;
+    color: var(--texto);
+    background: var(--painel);
+    border: 2px solid var(--borda);
+    border-radius: 10px;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  .dir:active { background: #1f3d2c; }
+  .dir[data-dir="CIMA"] { grid-area: cima; }
+  .dir[data-dir="ESQUERDA"] { grid-area: esq; }
+  .dir[data-dir="BAIXO"] { grid-area: baixo; }
+  .dir[data-dir="DIREITA"] { grid-area: dir; }
+
+  .tela {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    justify-content: safe center;
+    gap: 10px;
+    padding: 16px 14px;
+    overflow-y: auto;
+    text-align: center;
+    background: rgba(7, 7, 15, 0.94);
+    line-height: 1.3;
+  }
+  #tela-contagem { background: rgba(7, 7, 15, 0.55); justify-content: center; }
+  .tela h2 { margin: 0; font-size: 1.6rem; color: var(--borda); text-shadow: 0 0 8px rgba(57, 255, 136, 0.5); }
+  .tela h3 { margin: 4px 0; font-size: 1rem; color: var(--ouro); }
+  .tela p { margin: 0; }
+  .titulao { font-size: 2.6rem !important; letter-spacing: 0.25em; }
+  .suave { color: var(--suave); font-size: 0.85rem; }
+  .destaque { color: var(--ouro); font-size: 1.2rem; font-weight: bold; }
+  .aviso-erro { color: var(--ruim); font-weight: bold; }
+  .botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .botao {
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #07110a;
+    background: var(--borda);
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    min-width: 130px;
+    min-height: 48px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .botao.sec { color: var(--texto); background: var(--painel); border: 2px solid var(--borda); }
+  .botao:disabled { opacity: 0.4; cursor: default; }
+  .botao:focus-visible, .mini:focus-visible, .alt:focus-visible { outline: 3px solid var(--ouro); outline-offset: 2px; }
+  #cronometro { width: min(420px, 90%); height: 10px; background: #26264d; border-radius: 5px; overflow: hidden; }
+  #cronometro i { display: block; height: 100%; width: 100%; background: var(--borda); }
+  #cronometro i.urgente { background: var(--ruim); }
+  #pergunta-tempo { font-size: 1.1rem; }
+  #pergunta-enunciado { font-size: 1.15rem; max-width: 560px; }
+  #pergunta-materia { color: var(--ouro); font-size: 0.8rem; text-transform: uppercase; }
+  .alternativas { display: grid; gap: 8px; width: min(560px, 100%); }
+  .alt {
+    font: inherit;
+    font-size: 1rem;
+    text-align: left;
+    color: var(--texto);
+    background: var(--painel);
+    border: 2px solid #3a3a70;
+    border-radius: 8px;
+    padding: 10px 12px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  .alt span { color: var(--ouro); font-weight: bold; }
+  .alt.certa { border-color: var(--bom); background: #123a24; }
+  .alt.errada { border-color: var(--ruim); background: #3a1220; }
+  .alt.parada { cursor: default; }
+  #resultado-titulo.certa { color: var(--bom); }
+  #resultado-titulo.errada, #resultado-titulo.tempo { color: var(--ruim); }
+  #resultado-explicacao { max-width: 560px; font-size: 1rem; }
+  #resultado-efeito { font-weight: bold; }
+  #resultado-efeito.sobe { color: var(--bom); }
+  #resultado-efeito.desce { color: var(--ruim); }
+  #contagem-numero { font-size: 6rem; font-weight: bold; color: var(--ouro); text-shadow: 0 0 16px rgba(255, 210, 63, 0.7); }
+  #revisao { width: min(560px, 100%); text-align: left; }
+  .rev-item { border-left: 4px solid var(--ruim); background: var(--painel); border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; font-size: 0.9rem; }
+  .rev-item p + p { margin-top: 4px; }
+  #iniciais {
+    font: inherit;
+    font-size: 2rem;
+    text-align: center;
+    letter-spacing: 0.4em;
+    width: 7ch;
+    padding: 6px 4px 6px 12px;
+    color: var(--ouro);
+    background: #000;
+    border: 3px solid var(--borda);
+    border-radius: 8px;
+    -webkit-user-select: text;
+    user-select: text;
+    text-transform: uppercase;
+  }
+  #ranking-lista { list-style: none; margin: 0; padding: 0; width: min(360px, 100%); text-align: left; }
+  #ranking-lista li { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px dashed #26264d; font-size: 1.1rem; }
+  #ranking-lista li.novo { color: var(--ouro); background: #2a2408; font-weight: bold; }
+  #aviso-tamanho {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+    background: var(--fundo);
+  }
+  @media (max-width: 239px), (max-height: 239px) { #aviso-tamanho { display: flex; } }
+  @media (orientation: landscape) and (max-height: 520px) {
+    #fliperama {
+      grid-template-columns: 210px minmax(0, 1fr) 210px;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      grid-template-areas: "topo moldura controles" "hud moldura controles" ". moldura controles";
+    }
+    #hud { grid-template-columns: 1fr 1fr; }
+    #topo { flex-wrap: wrap; }
+    #topo .espaco { display: none; }
+    body.toque #controles { align-items: center; }
+    .tela { padding: 8px; gap: 6px; }
+    .titulao { font-size: 1.8rem !important; }
+    #contagem-numero { font-size: 4rem; }
+  }
+</style>
+</head>
+<body>
+<div id="fliperama">
+  <header id="topo">
+    <h1>SNAKE</h1>
+    <span id="versao"></span>
+    <span class="espaco"></span>
+    <button id="btn-pausa" class="mini" type="button" hidden>Pausar</button>
+    <button id="btn-som" class="mini" type="button" aria-pressed="false">Som: ligado</button>
+  </header>
+
+  <section id="hud" aria-label="Estado do jogo">
+    <div class="medidor"><small>Pontos</small><b id="hud-pontos">0</b></div>
+    <div class="medidor"><small>Combo</small><b id="hud-combo">x1</b></div>
+    <div class="medidor"><small>Tamanho</small><b id="hud-tamanho">3</b></div>
+    <div class="medidor"><small>Efeito</small><b id="hud-efeito">Nenhum</b></div>
+  </section>
+
+  <main id="moldura">
+    <div id="area">
+      <canvas id="tabuleiro" aria-label="Tabuleiro do jogo"></canvas>
+      <div id="aviso" role="status" aria-live="polite" hidden></div>
+    </div>
+  </main>
+
+  <footer id="controles" aria-label="Controles na tela">
+    <div id="direcionais">
+      <button class="dir" type="button" data-dir="CIMA" aria-label="Cima">▲</button>
+      <button class="dir" type="button" data-dir="ESQUERDA" aria-label="Esquerda">◀</button>
+      <button class="dir" type="button" data-dir="BAIXO" aria-label="Baixo">▼</button>
+      <button class="dir" type="button" data-dir="DIREITA" aria-label="Direita">▶</button>
+    </div>
+  </footer>
+
+  <section id="tela-titulo" class="tela" hidden>
+    <h2 class="titulao">SNAKE</h2>
+    <p class="suave">Coma frutas, responda às perguntas e não bata!</p>
+    <p id="titulo-versao" class="suave"></p>
+    <p id="titulo-aviso" class="aviso-erro" hidden>Perguntas não encontradas. Verifique o arquivo perguntas.js.</p>
+    <div class="botoes">
+      <button id="btn-jogar" class="botao" type="button">Jogar</button>
+      <button id="btn-ranking" class="botao sec" type="button">Ranking</button>
+    </div>
+    <p class="suave" id="titulo-teclas">Setas ou WASD: mover · P ou Esc: pausar · M: som</p>
+    <p class="suave" id="titulo-toque" hidden>Deslize na tela ou use os botões para mover</p>
+  </section>
+
+  <section id="tela-pausa" class="tela" hidden>
+    <h2>Pausado</h2>
+    <div class="botoes">
+      <button id="btn-continuar" class="botao" type="button">Continuar</button>
+      <button id="btn-pausa-menu" class="botao sec" type="button">Menu</button>
+    </div>
+    <p class="suave">P ou Esc para continuar</p>
+  </section>
+
+  <section id="tela-contagem" class="tela" hidden>
+    <div id="contagem-numero">3</div>
+  </section>
+
+  <section id="tela-pergunta" class="tela" hidden>
+    <p id="pergunta-materia"></p>
+    <div id="cronometro"><i id="cronometro-barra"></i></div>
+    <p id="pergunta-tempo">15 s</p>
+    <p id="pergunta-enunciado"></p>
+    <div id="pergunta-alternativas" class="alternativas"></div>
+    <p class="suave" id="pergunta-dica">Tecle 1, 2, 3 ou 4 para responder</p>
+  </section>
+
+  <section id="tela-resultado" class="tela" hidden>
+    <h2 id="resultado-titulo"></h2>
+    <p id="resultado-enunciado"></p>
+    <div id="resultado-alternativas" class="alternativas"></div>
+    <p id="resultado-explicacao"></p>
+    <p id="resultado-pontos" class="destaque"></p>
+    <p id="resultado-efeito"></p>
+    <button id="btn-resultado" class="botao" type="button">Continuar</button>
+  </section>
+
+  <section id="tela-fim" class="tela" hidden>
+    <h2 id="fim-titulo">Fim de jogo</h2>
+    <p>Pontos: <b id="fim-pontos">0</b> · Tamanho: <b id="fim-tamanho">3</b></p>
+    <div id="revisao">
+      <h3>Revisão das perguntas</h3>
+      <div id="revisao-lista"></div>
+    </div>
+    <div id="bloco-iniciais" hidden>
+      <p class="destaque">Novo recorde!</p>
+      <label for="iniciais">Digite suas iniciais</label>
+      <p><input id="iniciais" type="text" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text"></p>
+      <div class="botoes">
+        <button id="btn-salvar" class="botao" type="button" disabled>Salvar</button>
+        <button id="btn-pular" class="botao sec" type="button">Pular</button>
+      </div>
+    </div>
+    <p id="msg-armazenamento" class="aviso-erro" hidden>Ranking indisponível neste navegador.</p>
+    <div id="bloco-fim-botoes" class="botoes">
+      <button id="btn-de-novo" class="botao" type="button">Jogar de novo</button>
+      <button id="btn-fim-ranking" class="botao sec" type="button">Ranking</button>
+      <button id="btn-fim-menu" class="botao sec" type="button">Menu</button>
+    </div>
+  </section>
+
+  <section id="tela-ranking" class="tela" hidden>
+    <h2>Ranking</h2>
+    <p id="ranking-vazio" class="suave" hidden>Nenhum recorde ainda.</p>
+    <ol id="ranking-lista"></ol>
+    <p id="ranking-msg" class="aviso-erro" hidden>Ranking indisponível neste navegador.</p>
+    <div class="botoes">
+      <button id="btn-ranking-jogar" class="botao" type="button">Jogar</button>
+      <button id="btn-ranking-menu" class="botao sec" type="button">Menu</button>
+    </div>
+  </section>
+
+  <div id="aviso-tamanho"><p>Gire o aparelho ou aumente a janela.</p></div>
+</div>
+
+<script src="perguntas.js" onerror="window.perguntasFalhou = true"></script>
+<script>
+"use strict";
+
+// ===== SEÇÃO: constantes =====
+const VERSAO = "1.0.0";
+
+const COLUNAS = 20;
+const LINHAS = 20;
+const TAMANHO_INICIAL = 3;
+
+const VELOCIDADE_INICIAL = 6;        // movimentos por segundo
+const VELOCIDADE_POR_FRUTA = 0.15;
+const VELOCIDADE_TETO = 12;          // teto da velocidade normal
+const VELOCIDADE_MAXIMA = 16;        // limite absoluto, nunca ultrapassado
+
+const FRUTAS_POR_PERGUNTA = 5;
+const TEMPO_PERGUNTA = 15;           // segundos
+const ESPERA_RESULTADO = 0.6;        // segundos antes de poder continuar
+const CONTAGEM_SEGUNDOS = 3;
+
+const PONTOS_FRUTA = 10;
+const BONUS_RESPOSTA = 50;
+const COMBO_A_CADA = 5;
+const COMBO_MAXIMO = 5;
+
+const FILA_MAXIMA = 2;
+const LIMIAR_DESLIZE = 24;           // pixels
+const MAX_ALTERNATIVA = 40;
+const MAX_ENUNCIADO = 160;
+const RANKING_MAXIMO = 10;
+
+const DIRECOES = {
+  CIMA: { x: 0, y: -1, nome: "CIMA" },
+  BAIXO: { x: 0, y: 1, nome: "BAIXO" },
+  ESQUERDA: { x: -1, y: 0, nome: "ESQUERDA" },
+  DIREITA: { x: 1, y: 0, nome: "DIREITA" }
+};
+
+const CICLO_UPGRADES = ["Câmera lenta", "Atravessar o corpo", "Pontos em dobro", "Escudo"];
+
+const EFEITOS = {
+  "Câmera lenta": { tipo: "UPGRADE", duracao: 8, fator: 0.5, usos: 0 },
+  "Atravessar o corpo": { tipo: "UPGRADE", duracao: 8, fator: 1, usos: 0 },
+  "Pontos em dobro": { tipo: "UPGRADE", duracao: 10, fator: 1, usos: 0 },
+  "Escudo": { tipo: "UPGRADE", duracao: 30, fator: 1, usos: 1 },
+  "Turbo": { tipo: "DOWNGRADE", duracao: 8, fator: 1.4, usos: 0 }
+};
+
+// ===== SEÇÃO: lógica pura =====
+// Tudo aqui não usa a tela nem o navegador, para poder ser testado com "#teste".
+let aleatorio = Math.random;
+
+function chave(x, y) { return x + "," + y; }
+
+function velocidadeBase(frutas) {
+  return Math.min(VELOCIDADE_INICIAL + VELOCIDADE_POR_FRUTA * frutas, VELOCIDADE_TETO);
+}
+
+function limitarVelocidade(v) {
+  return Math.min(v, VELOCIDADE_MAXIMA);
+}
+
+function multiplicador(sequencia) {
+  return Math.min(1 + Math.floor(sequencia / COMBO_A_CADA), COMBO_MAXIMO);
+}
+
+function embaralhar(lista) {
+  const c = lista.slice();
+  for (let i = c.length - 1; i > 0; i--) {
+    const j = Math.floor(aleatorio() * (i + 1));
+    const t = c[i]; c[i] = c[j]; c[j] = t;
+  }
+  return c;
+}
+
+// ocupadas: conjunto (Set) de chaves "x,y". Devolve uma célula livre ou null se a grade está cheia.
+function celulaLivre(ocupadas) {
+  const livres = [];
+  for (let y = 0; y < LINHAS; y++) {
+    for (let x = 0; x < COLUNAS; x++) {
+      if (!ocupadas.has(chave(x, y))) livres.push({ x: x, y: y });
+    }
+  }
+  if (livres.length === 0) return null;
+  return livres[Math.floor(aleatorio() * livres.length)];
+}
+
+function deltaDeJogo(estado, dt) {
+  return estado === "JOGANDO" ? dt : 0;
+}
+
+function ocupadasDe(p) {
+  const s = new Set();
+  for (const c of p.cobra) s.add(chave(c.x, c.y));
+  if (p.fruta) s.add(chave(p.fruta.x, p.fruta.y));
+  if (p.especial) s.add(chave(p.especial.x, p.especial.y));
+  return s;
+}
+
+function criarPartida() {
+  const cx = Math.floor(COLUNAS / 2);
+  const cy = Math.floor(LINHAS / 2);
+  const cobra = [];
+  for (let i = 0; i < TAMANHO_INICIAL; i++) cobra.push({ x: cx - i, y: cy });
+  const p = {
+    cobra: cobra,
+    dir: DIRECOES.DIREITA,
+    fila: [],
+    fruta: null,
+    especial: null,
+    pontos: 0,
+    frutasComidas: 0,
+    frutasDesdePergunta: 0,
+    sequencia: 0,
+    efeito: null,
+    posCiclo: 0,
+    registros: [],
+    fim: false,
+    ganhou: false
+  };
+  p.fruta = celulaLivre(ocupadasDe(p));
+  return p;
+}
+
+function oposta(a, b) { return a.x + b.x === 0 && a.y + b.y === 0; }
+
+// Enfileira uma virada (no máximo 2). Ignora a direção oposta e a repetida.
+function pedirDirecao(p, dir) {
+  const referencia = p.fila.length ? p.fila[p.fila.length - 1] : p.dir;
+  if (dir === referencia || oposta(dir, referencia)) return;
+  if (p.fila.length >= FILA_MAXIMA) return;
+  p.fila.push(dir);
+}
+
+function temEfeito(p, nome) { return !!(p.efeito && p.efeito.nome === nome); }
+
+function pontosGanhos(p, base) {
+  return base * (temEfeito(p, "Pontos em dobro") ? 2 : 1);
+}
+
+function cabecaSobreCorpo(p) {
+  const h = p.cobra[0];
+  for (let i = 1; i < p.cobra.length; i++) {
+    if (p.cobra[i].x === h.x && p.cobra[i].y === h.y) return true;
+  }
+  return false;
+}
+
+// Avança um tick. Devolve { tipo: "nada" | "fruta" | "especial" | "escudo" | "fim" }.
+function passo(p) {
+  if (p.fim) return { tipo: "fim" };
+  if (p.fila.length) p.dir = p.fila.shift();
+
+  const cabeca = p.cobra[0];
+  const nx = cabeca.x + p.dir.x;
+  const ny = cabeca.y + p.dir.y;
+  const naParede = nx < 0 || ny < 0 || nx >= COLUNAS || ny >= LINHAS;
+  let noCorpo = false;
+  if (!naParede && !temEfeito(p, "Atravessar o corpo")) {
+    // a ponta da cauda sai do lugar neste tick, então não conta como obstáculo
+    for (let i = 0; i < p.cobra.length - 1; i++) {
+      if (p.cobra[i].x === nx && p.cobra[i].y === ny) { noCorpo = true; break; }
+    }
+  }
+  if (naParede || noCorpo) {
+    if (temEfeito(p, "Escudo")) {
+      p.efeito = null;            // o escudo absorve a batida e a cobra fica parada neste tick
+      return { tipo: "escudo" };
+    }
+    p.fim = true;
+    return { tipo: "fim" };
+  }
+
+  p.cobra.unshift({ x: nx, y: ny });
+  const comeuComum = p.fruta && p.fruta.x === nx && p.fruta.y === ny;
+  const comeuEspecial = p.especial && p.especial.x === nx && p.especial.y === ny;
+
+  if (comeuComum) {
+    p.pontos += pontosGanhos(p, PONTOS_FRUTA * multiplicador(p.sequencia));
+    p.frutasComidas++;
+    p.sequencia++;
+    if (!p.especial) p.frutasDesdePergunta++;
+    p.fruta = celulaLivre(ocupadasDe(p));
+    if (!p.fruta) {
+      p.fim = true;
+      p.ganhou = true;
+      return { tipo: "fim" };
+    }
+    if (!p.especial && p.frutasDesdePergunta >= FRUTAS_POR_PERGUNTA) {
+      const c = celulaLivre(ocupadasDe(p));
+      if (c) { p.especial = c; p.frutasDesdePergunta = 0; }
+    }
+    return { tipo: "fruta" };
+  }
+
+  p.cobra.pop();
+  if (comeuEspecial) {
+    p.especial = null;
+    return { tipo: "especial" };
+  }
+  return { tipo: "nada" };
+}
+
+// ----- efeitos -----
+function aplicarEfeito(p, nome) {
+  const def = EFEITOS[nome];
+  p.efeito = { nome: nome, tipo: def.tipo, restante: def.duracao, usos: def.usos, fator: def.fator };
+}
+
+function concederUpgrade(p) {
+  const nome = CICLO_UPGRADES[p.posCiclo];
+  p.posCiclo = (p.posCiclo + 1) % CICLO_UPGRADES.length;
+  aplicarEfeito(p, nome);
+  return nome;
+}
+
+// dt é tempo de jogo: quem chama só passa valores maiores que zero em JOGANDO
+function avancarEfeito(p, dt) {
+  const e = p.efeito;
+  if (!e) return;
+  e.restante = Math.max(0, e.restante - dt);
+  if (e.restante > 0) return;
+  // "Atravessar o corpo" só acaba quando a cabeça sai de cima do corpo
+  if (e.nome === "Atravessar o corpo" && cabecaSobreCorpo(p)) return;
+  p.efeito = null;
+}
+
+function velocidadeAtual(p) {
+  const fator = p.efeito ? p.efeito.fator : 1;
+  return limitarVelocidade(velocidadeBase(p.frutasComidas) * fator);
+}
+
+// ----- perguntas -----
+function textoValido(t, max) {
+  return typeof t === "string" && t.trim().length > 0 && t.length <= max;
+}
+
+function validarPergunta(p) {
+  if (!p || typeof p !== "object") return false;
+  if (!textoValido(p.q, MAX_ENUNCIADO)) return false;
+  if (!Array.isArray(p.a) || p.a.length < 4) return false;
+  for (const alt of p.a) if (!textoValido(alt, MAX_ALTERNATIVA)) return false;
+  if (new Set(p.a).size !== p.a.length) return false;
+  if (typeof p.e !== "string" || p.e.trim().length === 0) return false;
+  if (typeof p.m !== "string" || p.m.trim().length === 0) return false;
+  return true;
+}
+
+function prepararBanco(lista) {
+  const validas = [];
+  const ignoradas = [];
+  if (!Array.isArray(lista)) return { validas: validas, ignoradas: ignoradas };
+  lista.forEach(function (p, i) {
+    if (validarPergunta(p)) validas.push(p); else ignoradas.push(i);
+  });
+  return { validas: validas, ignoradas: ignoradas };
+}
+
+// Sorteia uma matéria por vez (rodízio) e não repete pergunta até esgotar o banco.
+function criarSorteador(validas) {
+  let filas = null;
+  let materias = [];
+  let ponteiro = 0;
+
+  function recarregar() {
+    const porMateria = new Map();
+    for (const q of validas) {
+      if (!porMateria.has(q.m)) porMateria.set(q.m, []);
+      porMateria.get(q.m).push(q);
+    }
+    materias = Array.from(porMateria.keys());
+    filas = new Map();
+    for (const m of materias) filas.set(m, embaralhar(porMateria.get(m)));
+    ponteiro = 0;
+  }
+
+  return {
+    proxima: function () {
+      if (!filas || materias.every(function (m) { return filas.get(m).length === 0; })) recarregar();
+      for (let i = 0; i < materias.length; i++) {
+        const m = materias[(ponteiro + i) % materias.length];
+        const f = filas.get(m);
+        if (f.length) {
+          ponteiro = (ponteiro + i + 1) % materias.length;
+          return f.pop();
+        }
+      }
+      return null;
+    }
+  };
+}
+
+// A alternativa certa é sempre a primeira do arquivo; aqui ela vira 1 de 4 embaralhadas.
+function montarPergunta(q) {
+  const certa = q.a[0];
+  const erradas = embaralhar(q.a.slice(1)).slice(0, 3);
+  const alternativas = embaralhar([certa].concat(erradas));
+  return { q: q.q, e: q.e, m: q.m, alternativas: alternativas, correta: alternativas.indexOf(certa) };
+}
+
+function registrarResposta(p, perg, indice) {
+  let resultado;
+  if (indice === null || indice === undefined) resultado = "TEMPO";
+  else resultado = indice === perg.correta ? "CERTA" : "ERRADA";
+
+  p.registros.push({
+    enunciado: perg.q,
+    textoCorreto: perg.alternativas[perg.correta],
+    textoEscolhido: (indice === null || indice === undefined) ? null : perg.alternativas[indice],
+    explicacao: perg.e,
+    materia: perg.m,
+    resultado: resultado
+  });
+
+  let efeito;
+  let bonus = 0;
+  if (resultado === "CERTA") {
+    bonus = pontosGanhos(p, BONUS_RESPOSTA);
+    p.pontos += bonus;
+    p.sequencia++;
+    efeito = concederUpgrade(p);
+  } else {
+    p.sequencia = 0;
+    aplicarEfeito(p, "Turbo");
+    efeito = "Turbo";
+  }
+  return { resultado: resultado, efeito: efeito, bonus: bonus };
+}
+
+// ----- ranking -----
+function entradaValida(e) {
+  return !!e && typeof e.i === "string" && /^[A-Z]{3}$/.test(e.i) &&
+    Number.isInteger(e.p) && e.p > 0 && Number.isInteger(e.t);
+}
+
+function ordenarRanking(lista) {
+  return lista.slice().sort(function (a, b) { return (b.p - a.p) || (a.t - b.t); }).slice(0, RANKING_MAXIMO);
+}
+
+function normalizarRanking(lista) {
+  return Array.isArray(lista) ? ordenarRanking(lista.filter(entradaValida)) : [];
+}
+
+function qualifica(pontos, lista) {
+  if (!(pontos > 0)) return false;
+  if (lista.length < RANKING_MAXIMO) return true;
+  return pontos > lista[lista.length - 1].p;
+}
+
+function inserirNoRanking(lista, entrada) {
+  return ordenarRanking(lista.concat([entrada]));
+}
+
+// ===== SEÇÃO: testes =====
+// Abra index.html#teste para rodar. Não usam a tela do jogo.
+const TESTES = [];
+function testar(nome, funcao) { TESTES.push({ nome: nome, funcao: funcao }); }
+function afirmar(condicao, mensagem) { if (!condicao) throw new Error(mensagem || "afirmação falhou"); }
+
+function gerarAleatorio(semente) {
+  let s = semente >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function partidaSemFruta() {
+  const p = criarPartida();
+  p.fruta = { x: 0, y: 0 };
+  return p;
+}
+
+function perguntaModelo(n, materia) {
+  return { q: "Pergunta " + n + "?", a: ["Certa " + n, "Errada A" + n, "Errada B" + n, "Errada C" + n], e: "Explicação " + n, m: materia };
+}
+
+testar("estado inicial da partida", function () {
+  const p = criarPartida();
+  afirmar(p.cobra.length === 3, "tamanho 3");
+  afirmar(p.dir === DIRECOES.DIREITA, "indo para a direita");
+  afirmar(p.pontos === 0 && p.sequencia === 0 && multiplicador(p.sequencia) === 1, "placar e combo zerados");
+  afirmar(p.efeito === null && p.especial === null && !p.fim, "sem efeito, sem fruta especial, sem fim");
+  afirmar(p.fruta && !ocupadasDe({ cobra: p.cobra, fruta: null, especial: null }).has(chave(p.fruta.x, p.fruta.y)), "fruta fora da cobra");
+});
+
+testar("um movimento por tick", function () {
+  const p = partidaSemFruta();
+  const antes = p.cobra[0];
+  passo(p);
+  afirmar(p.cobra[0].x === antes.x + 1 && p.cobra[0].y === antes.y, "cabeça andou 1 célula");
+  afirmar(p.cobra.length === 3, "sem crescer");
+});
+
+testar("cresce ao comer fruta comum e pontua", function () {
+  const p = criarPartida();
+  const h = p.cobra[0];
+  p.fruta = { x: h.x + 1, y: h.y };
+  const ev = passo(p);
+  afirmar(ev.tipo === "fruta", "evento de fruta");
+  afirmar(p.cobra.length === 4, "cresceu 1");
+  afirmar(p.pontos === 10, "10 pontos com combo x1");
+  afirmar(p.frutasComidas === 1 && p.sequencia === 1, "contadores");
+  afirmar(p.fruta && !p.cobra.some(function (c) { return c.x === p.fruta.x && c.y === p.fruta.y; }), "nova fruta livre");
+});
+
+testar("colisão com a parede termina a partida", function () {
+  const p = partidaSemFruta();
+  let ev = { tipo: "nada" };
+  for (let i = 0; i < COLUNAS && !p.fim; i++) ev = passo(p);
+  afirmar(p.fim && ev.tipo === "fim" && !p.ganhou, "acabou na parede");
+});
+
+testar("colisão com o corpo termina a partida", function () {
+  const p = partidaSemFruta();
+  p.cobra = [{ x: 5, y: 5 }, { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 4, y: 5 }, { x: 4, y: 4 }, { x: 5, y: 4 }];
+  p.dir = DIRECOES.CIMA;
+  pedirDirecao(p, DIRECOES.ESQUERDA);
+  const ev = passo(p);
+  afirmar(ev.tipo === "fim" && p.fim, "bateu no próprio corpo (4,5)");
+});
+
+testar("a ponta da cauda liberada não é obstáculo", function () {
+  const p = partidaSemFruta();
+  p.cobra = [{ x: 5, y: 5 }, { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 4, y: 5 }];
+  p.dir = DIRECOES.CIMA;
+  pedirDirecao(p, DIRECOES.ESQUERDA);
+  const ev = passo(p);
+  afirmar(ev.tipo === "nada" && !p.fim, "entrou onde a cauda estava");
+});
+
+testar("não inverte a direção", function () {
+  const p = partidaSemFruta();
+  pedirDirecao(p, DIRECOES.ESQUERDA);
+  afirmar(p.fila.length === 0, "oposta ignorada");
+  pedirDirecao(p, DIRECOES.DIREITA);
+  afirmar(p.fila.length === 0, "repetida ignorada");
+  pedirDirecao(p, DIRECOES.CIMA);
+  pedirDirecao(p, DIRECOES.ESQUERDA);
+  afirmar(p.fila.length === 2, "duas viradas na fila");
+  pedirDirecao(p, DIRECOES.BAIXO);
+  afirmar(p.fila.length === 2, "fila limitada a 2");
+  passo(p);
+  afirmar(p.dir === DIRECOES.CIMA && p.fila.length === 1, "uma virada por tick");
+  passo(p);
+  afirmar(p.dir === DIRECOES.ESQUERDA, "a segunda virada no tick seguinte");
+});
+
+testar("frutas nunca nascem sobre a cobra", function () {
+  aleatorio = gerarAleatorio(7);
+  const p = criarPartida();
+  for (let i = 0; i < 300; i++) {
+    const c = celulaLivre(ocupadasDe(p));
+    afirmar(!p.cobra.some(function (s) { return s.x === c.x && s.y === c.y; }), "célula livre");
+  }
+  aleatorio = Math.random;
+});
+
+testar("vitória quando a grade enche", function () {
+  const p = criarPartida();
+  const trilha = [];
+  for (let y = 0; y < LINHAS; y++) {
+    for (let x = 0; x < COLUNAS; x++) trilha.push({ x: (y % 2 === 0) ? x : COLUNAS - 1 - x, y: y });
+  }
+  const ultima = trilha[trilha.length - 1];
+  const penultima = trilha[trilha.length - 2];
+  p.cobra = trilha.slice(0, trilha.length - 1).reverse();
+  p.fruta = ultima;
+  p.especial = null;
+  p.dir = (ultima.x > penultima.x) ? DIRECOES.DIREITA : (ultima.x < penultima.x ? DIRECOES.ESQUERDA : DIRECOES.BAIXO);
+  const ev = passo(p);
+  afirmar(ev.tipo === "fim" && p.ganhou && p.fim, "venceu com a grade cheia");
+});
+
+testar("velocidade: curva, teto e limite absoluto", function () {
+  afirmar(velocidadeBase(0) === 6, "começa em 6");
+  afirmar(Math.abs(velocidadeBase(10) - 7.5) < 1e-9, "6 + 0,15 por fruta");
+  afirmar(velocidadeBase(40) === 12 && velocidadeBase(500) === 12, "teto de 12");
+  afirmar(limitarVelocidade(99) === VELOCIDADE_MAXIMA, "limite de 16");
+  const p = criarPartida();
+  for (let frutas = 0; frutas <= 100; frutas++) {
+    p.frutasComidas = frutas;
+    for (const nome of Object.keys(EFEITOS)) {
+      aplicarEfeito(p, nome);
+      afirmar(velocidadeAtual(p) <= 16, "nunca acima de 16 (" + nome + ", " + frutas + ")");
+    }
+  }
+  p.frutasComidas = 40;
+  aplicarEfeito(p, "Turbo");
+  afirmar(velocidadeAtual(p) === 16, "turbo no teto de 12 chega ao limite de 16");
+  aplicarEfeito(p, "Câmera lenta");
+  afirmar(velocidadeAtual(p) === 6, "câmera lenta corta pela metade");
+});
+
+testar("multiplicador do combo", function () {
+  afirmar(multiplicador(0) === 1 && multiplicador(4) === 1, "x1 até 4");
+  afirmar(multiplicador(5) === 2 && multiplicador(9) === 2, "x2 de 5 a 9");
+  afirmar(multiplicador(20) === 5 && multiplicador(500) === 5, "teto x5");
+});
+
+testar("pontos usam o combo e o efeito em dobro", function () {
+  const p = criarPartida();
+  p.sequencia = 5;
+  p.fruta = { x: p.cobra[0].x + 1, y: p.cobra[0].y };
+  passo(p);
+  afirmar(p.pontos === 20, "x2 => 20");
+  aplicarEfeito(p, "Pontos em dobro");
+  p.fruta = { x: p.cobra[0].x + 1, y: p.cobra[0].y };
+  passo(p);
+  afirmar(p.pontos === 20 + 40, "x2 em dobro => 40");
+});
+
+testar("fruta ? aparece a cada 5 frutas, uma por vez", function () {
+  const p = criarPartida();
+  let vistas = 0;
+  for (let i = 0; i < 12 && !p.fim; i++) {
+    p.cobra = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    p.dir = DIRECOES.DIREITA;
+    p.fila = [];
+    if (p.especial && p.especial.x === 11 && p.especial.y === 10) p.especial = { x: 0, y: 0 };
+    p.fruta = { x: 11, y: 10 };
+    passo(p);
+    if (p.especial) vistas++;
+    afirmar(i < 4 ? p.especial === null : true, "sem ? antes da 5ª fruta");
+    if (i === 4) afirmar(p.especial !== null, "? na 5ª fruta");
+  }
+  afirmar(vistas >= 1, "a ? apareceu");
+});
+
+testar("? não conta frutas enquanto está na grade", function () {
+  const p = criarPartida();
+  p.especial = { x: 0, y: 0 };
+  p.frutasDesdePergunta = 0;
+  for (let i = 0; i < 7; i++) {
+    p.cobra = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    p.dir = DIRECOES.DIREITA;
+    p.fruta = { x: 11, y: 10 };
+    passo(p);
+  }
+  afirmar(p.frutasDesdePergunta === 0 && p.especial.x === 0, "sem segunda ?");
+});
+
+testar("comer a ? não cresce nem pontua", function () {
+  const p = criarPartida();
+  const h = p.cobra[0];
+  p.especial = { x: h.x + 1, y: h.y };
+  const ev = passo(p);
+  afirmar(ev.tipo === "especial" && p.cobra.length === 3 && p.pontos === 0 && p.especial === null, "só abre a pergunta");
+});
+
+testar("ciclo de upgrades em ordem por 8 respostas certas", function () {
+  const p = criarPartida();
+  const esperado = ["Câmera lenta", "Atravessar o corpo", "Pontos em dobro", "Escudo"];
+  for (let i = 0; i < 8; i++) {
+    const perg = { q: "q", e: "e", m: "m", alternativas: ["a", "b", "c", "d"], correta: 0 };
+    const r = registrarResposta(p, perg, 0);
+    afirmar(r.resultado === "CERTA" && r.efeito === esperado[i % 4], "upgrade " + i);
+    afirmar(p.efeito.nome === esperado[i % 4], "efeito ativo " + i);
+  }
+});
+
+testar("resposta errada e tempo esgotado: turbo, combo zerado, sem fim", function () {
+  const p = criarPartida();
+  p.sequencia = 12;
+  const perg = { q: "q", e: "e", m: "m", alternativas: ["a", "b", "c", "d"], correta: 2 };
+  const r1 = registrarResposta(p, perg, 1);
+  afirmar(r1.resultado === "ERRADA" && p.sequencia === 0 && p.efeito.nome === "Turbo" && !p.fim, "errada");
+  p.sequencia = 7;
+  const r2 = registrarResposta(p, perg, null);
+  afirmar(r2.resultado === "TEMPO" && p.sequencia === 0 && p.efeito.nome === "Turbo" && !p.fim, "tempo");
+  afirmar(p.registros.length === 2 && p.registros[1].textoEscolhido === null, "registros");
+});
+
+testar("resposta certa dá bônus sem combo e soma 1 à sequência", function () {
+  const p = criarPartida();
+  p.sequencia = 5;
+  const perg = { q: "q", e: "e", m: "m", alternativas: ["a", "b", "c", "d"], correta: 3 };
+  registrarResposta(p, perg, 3);
+  afirmar(p.pontos === 50 && p.sequencia === 6, "50 pontos fixos");
+});
+
+testar("um efeito por vez, o novo substitui o atual", function () {
+  const p = criarPartida();
+  aplicarEfeito(p, "Escudo");
+  aplicarEfeito(p, "Turbo");
+  afirmar(p.efeito.nome === "Turbo", "substituído");
+});
+
+testar("efeitos: duração só em tempo de jogo e expiração", function () {
+  const p = criarPartida();
+  aplicarEfeito(p, "Câmera lenta");
+  avancarEfeito(p, deltaDeJogo("PAUSADO", 5));
+  avancarEfeito(p, deltaDeJogo("PERGUNTA", 5));
+  avancarEfeito(p, deltaDeJogo("RESULTADO", 5));
+  avancarEfeito(p, deltaDeJogo("CONTAGEM", 5));
+  afirmar(p.efeito.restante === 8, "parado fora de JOGANDO");
+  avancarEfeito(p, deltaDeJogo("JOGANDO", 3));
+  afirmar(p.efeito.restante === 5, "corre em JOGANDO");
+  avancarEfeito(p, deltaDeJogo("JOGANDO", 5));
+  afirmar(p.efeito === null, "expirou");
+});
+
+testar("atravessar o corpo: cruza o corpo, mas não a parede; fica ativo se acabar em cima do corpo", function () {
+  const p = partidaSemFruta();
+  p.cobra = [{ x: 5, y: 5 }, { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 4, y: 5 }, { x: 4, y: 4 }, { x: 5, y: 4 }];
+  p.dir = DIRECOES.CIMA;
+  aplicarEfeito(p, "Atravessar o corpo");
+  pedirDirecao(p, DIRECOES.ESQUERDA);
+  const ev = passo(p);
+  afirmar(ev.tipo === "nada" && !p.fim && cabecaSobreCorpo(p), "atravessou");
+  p.efeito.restante = 0.1;
+  avancarEfeito(p, 1);
+  afirmar(p.efeito !== null && p.efeito.restante === 0, "continua ativo sobre o corpo");
+  p.cobra = [{ x: 0, y: 5 }, { x: 1, y: 5 }, { x: 2, y: 5 }];
+  p.dir = DIRECOES.ESQUERDA;
+  p.fila = [];
+  passo(p);
+  afirmar(p.fim, "parede continua fatal");
+});
+
+testar("escudo cancela uma colisão e some", function () {
+  const p = partidaSemFruta();
+  p.cobra = [{ x: 0, y: 5 }, { x: 1, y: 5 }, { x: 2, y: 5 }];
+  p.dir = DIRECOES.ESQUERDA;
+  aplicarEfeito(p, "Escudo");
+  const ev = passo(p);
+  afirmar(ev.tipo === "escudo" && !p.fim && p.efeito === null && p.cobra[0].x === 0, "cobra parada, escudo gasto");
+  const ev2 = passo(p);
+  afirmar(ev2.tipo === "fim", "segunda batida é fatal");
+});
+
+testar("validarPergunta", function () {
+  afirmar(validarPergunta(perguntaModelo(1, "A")), "válida");
+  const longa = perguntaModelo(1, "A"); longa.q = "x".repeat(161);
+  afirmar(!validarPergunta(longa), "enunciado acima de 160");
+  const curta = perguntaModelo(1, "A"); curta.a = ["1", "2", "3"];
+  afirmar(!validarPergunta(curta), "menos de 4 alternativas");
+  const altLonga = perguntaModelo(1, "A"); altLonga.a[2] = "y".repeat(41);
+  afirmar(!validarPergunta(altLonga), "alternativa acima de 40");
+  const semE = perguntaModelo(1, "A"); semE.e = "  ";
+  afirmar(!validarPergunta(semE), "sem explicação");
+  const semM = perguntaModelo(1, "A"); semM.m = "";
+  afirmar(!validarPergunta(semM), "sem matéria");
+  const repetida = perguntaModelo(1, "A"); repetida.a[1] = repetida.a[0];
+  afirmar(!validarPergunta(repetida), "alternativas repetidas");
+  afirmar(prepararBanco(undefined).validas.length === 0 && prepararBanco([]).validas.length === 0, "banco ausente ou vazio");
+  const b = prepararBanco([perguntaModelo(1, "A"), { q: "" }, perguntaModelo(2, "B")]);
+  afirmar(b.validas.length === 2 && b.ignoradas.length === 1 && b.ignoradas[0] === 1, "pula inválidas");
+});
+
+testar("sorteio: sem repetir, matérias equilibradas, reinicia", function () {
+  aleatorio = gerarAleatorio(42);
+  const banco = [];
+  ["A", "B", "C"].forEach(function (m) { for (let i = 0; i < 4; i++) banco.push(perguntaModelo(m + i, m)); });
+  const s = criarSorteador(banco);
+  const vistas = new Set();
+  const materias = [];
+  for (let i = 0; i < 12; i++) {
+    const q = s.proxima();
+    afirmar(!vistas.has(q.q), "sem repetir");
+    vistas.add(q.q);
+    materias.push(q.m);
+  }
+  afirmar(vistas.size === 12, "todas usadas");
+  afirmar(materias.slice(0, 3).sort().join("") === "ABC" && materias.slice(3, 6).sort().join("") === "ABC", "rodízio de matérias");
+  afirmar(s.proxima() !== null, "reinicia do banco completo");
+  afirmar(criarSorteador([]).proxima() === null, "banco vazio devolve null");
+  aleatorio = Math.random;
+});
+
+testar("montarPergunta: 4 alternativas e a certa rastreada", function () {
+  aleatorio = gerarAleatorio(3);
+  const q = perguntaModelo(1, "A");
+  q.a.push("Errada D1", "Errada E1");
+  for (let i = 0; i < 50; i++) {
+    const m = montarPergunta(q);
+    afirmar(m.alternativas.length === 4 && new Set(m.alternativas).size === 4, "4 distintas");
+    afirmar(m.alternativas[m.correta] === "Certa 1", "índice da certa");
+  }
+  aleatorio = Math.random;
+});
+
+testar("ranking: qualifica, ordena, desempata e corta em 10", function () {
+  const mk = function (i, p, t) { return { i: i, p: p, t: t }; };
+  afirmar(!qualifica(0, []) && qualifica(1, []), "precisa ter mais de 0 pontos");
+  let lista = [];
+  for (let n = 1; n <= 10; n++) lista = inserirNoRanking(lista, mk("AAA", n * 10, n));
+  afirmar(lista.length === 10 && lista[0].p === 100 && lista[9].p === 10, "10 entradas em ordem");
+  afirmar(!qualifica(10, lista) && qualifica(11, lista), "só entra se passar do último");
+  lista = inserirNoRanking(lista, mk("BBB", 55, 99));
+  afirmar(lista.length === 10 && lista.every(function (e) { return e.p !== 10; }), "o último saiu");
+  const empate = inserirNoRanking([mk("OLD", 50, 1)], mk("NEW", 50, 2));
+  afirmar(empate[0].i === "OLD", "mais antigo primeiro no empate");
+});
+
+testar("ranking: validação ao carregar", function () {
+  afirmar(normalizarRanking(null).length === 0 && normalizarRanking("x").length === 0, "formato errado vira lista vazia");
+  const lista = normalizarRanking([
+    { i: "ABC", p: 10, t: 1 }, { i: "ab", p: 10, t: 1 }, { i: "ABCD", p: 10, t: 1 },
+    { i: "AB1", p: 10, t: 1 }, { i: "ABC", p: 0, t: 1 }, { i: "ABC", p: 1.5, t: 1 },
+    { i: "ABC", p: 5, t: "x" }, null, { i: "ZZZ", p: 20, t: 2 }
+  ]);
+  afirmar(lista.length === 2 && lista[0].i === "ZZZ", "descarta entradas inválidas");
+});
+
+function executarTestes() {
+  const resultados = [];
+  let falhas = 0;
+  for (const t of TESTES) {
+    try {
+      t.funcao();
+      resultados.push("ok      " + t.nome);
+    } catch (erro) {
+      falhas++;
+      resultados.push("falhou  " + t.nome + " — " + erro.message);
+    }
+  }
+  aleatorio = Math.random;
+  resultados.push("");
+  resultados.push(falhas === 0 ? "Todos os " + TESTES.length + " testes passaram." : falhas + " teste(s) falharam.");
+  if (typeof console !== "undefined") console.log(resultados.join("\n"));
+  return { falhas: falhas, linhas: resultados };
+}
+// ===== FIM DOS TESTES =====
+
+// ===== SEÇÃO: armazenamento =====
+const CHAVE_RANKING = "snake.ranking";
+const CHAVE_MUDO = "snake.mudo";
+let armazenamentoOk = false;
+
+function testarArmazenamento() {
+  try {
+    const teste = "snake.teste";
+    localStorage.setItem(teste, "1");
+    localStorage.removeItem(teste);
+    return true;
+  } catch (erro) {
+    return false;
+  }
+}
+
+function carregarRanking() {
+  try {
+    const texto = localStorage.getItem(CHAVE_RANKING);
+    if (!texto) return [];
+    return normalizarRanking(JSON.parse(texto));
+  } catch (erro) {
+    return [];
+  }
+}
+
+function salvarRanking(lista) {
+  try {
+    localStorage.setItem(CHAVE_RANKING, JSON.stringify(lista));
+    return true;
+  } catch (erro) {
+    return false;
+  }
+}
+
+function carregarMudo() {
+  try {
+    return localStorage.getItem(CHAVE_MUDO) === "1";
+  } catch (erro) {
+    return false;
+  }
+}
+
+function salvarMudo(valor) {
+  try {
+    localStorage.setItem(CHAVE_MUDO, valor ? "1" : "0");
+  } catch (erro) {
+    // sem armazenamento: a escolha vale só até fechar a página
+  }
+}
+
+// ===== SEÇÃO: áudio =====
+const audio = { ctx: null, mestre: null, efeitos: null, musica: null, agendador: null, proximoTempo: 0, passo: 0 };
+let mudo = false;
+const PASSO_MUSICA = 0.17;
+const MELODIA = [523.25, 0, 659.25, 0, 783.99, 659.25, 0, 587.33, 523.25, 0, 440, 0, 493.88, 523.25, 0, 392];
+const BAIXO_MUSICA = [130.81, 98, 110, 98];
+
+function iniciarAudio() {
+  try {
+    if (!audio.ctx) {
+      const Contexto = window.AudioContext || window.webkitAudioContext;
+      if (!Contexto) return;
+      audio.ctx = new Contexto();
+      audio.mestre = audio.ctx.createGain();
+      audio.mestre.gain.value = mudo ? 0 : 0.8;
+      audio.mestre.connect(audio.ctx.destination);
+      audio.efeitos = audio.ctx.createGain();
+      audio.efeitos.gain.value = 0.45;
+      audio.efeitos.connect(audio.mestre);
+      audio.musica = audio.ctx.createGain();
+      audio.musica.gain.value = 0.16;
+      audio.musica.connect(audio.mestre);
+      agendarMusica();
+    }
+    if (audio.ctx.state === "suspended") audio.ctx.resume();
+  } catch (erro) {
+    // áudio bloqueado ou indisponível: o jogo segue em silêncio
+  }
+}
+
+function aplicarMudo() {
+  if (audio.mestre) audio.mestre.gain.value = mudo ? 0 : 0.8;
+  const botao = document.getElementById("btn-som");
+  botao.textContent = mudo ? "Som: desligado" : "Som: ligado";
+  botao.setAttribute("aria-pressed", mudo ? "true" : "false");
+}
+
+function alternarMudo() {
+  mudo = !mudo;
+  salvarMudo(mudo);
+  aplicarMudo();
+  iniciarAudio();
+}
+
+function tocarNota(freq, inicio, duracao, tipo, volume, destino) {
+  const o = audio.ctx.createOscillator();
+  const g = audio.ctx.createGain();
+  o.type = tipo;
+  o.frequency.setValueAtTime(freq, inicio);
+  g.gain.setValueAtTime(0.0001, inicio);
+  g.gain.exponentialRampToValueAtTime(volume, inicio + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, inicio + duracao);
+  o.connect(g);
+  g.connect(destino);
+  o.start(inicio);
+  o.stop(inicio + duracao + 0.03);
+}
+
+function tocarVarredura(f1, f2, inicio, duracao, tipo, volume) {
+  const o = audio.ctx.createOscillator();
+  const g = audio.ctx.createGain();
+  o.type = tipo;
+  o.frequency.setValueAtTime(f1, inicio);
+  o.frequency.exponentialRampToValueAtTime(f2, inicio + duracao);
+  g.gain.setValueAtTime(volume, inicio);
+  g.gain.exponentialRampToValueAtTime(0.0001, inicio + duracao);
+  o.connect(g);
+  g.connect(audio.efeitos);
+  o.start(inicio);
+  o.stop(inicio + duracao + 0.03);
+}
+
+function tocarSom(nome) {
+  if (!audio.ctx) return;
+  try {
+    const t = audio.ctx.currentTime;
+    const d = audio.efeitos;
+    switch (nome) {
+      case "comer":
+        tocarNota(660, t, 0.07, "square", 0.3, d);
+        tocarNota(880, t + 0.06, 0.09, "square", 0.3, d);
+        break;
+      case "especial":
+        [523, 659, 784, 1047].forEach(function (f, i) { tocarNota(f, t + i * 0.07, 0.1, "triangle", 0.4, d); });
+        break;
+      case "certa":
+        [523, 659, 784, 1047].forEach(function (f, i) { tocarNota(f, t + i * 0.09, 0.16, "square", 0.3, d); });
+        break;
+      case "errada":
+        tocarVarredura(300, 90, t, 0.45, "sawtooth", 0.35);
+        break;
+      case "efeito":
+        tocarVarredura(400, 1200, t, 0.22, "triangle", 0.35);
+        break;
+      case "escudo":
+        tocarNota(200, t, 0.12, "square", 0.4, d);
+        tocarNota(140, t + 0.1, 0.16, "square", 0.4, d);
+        break;
+      case "fim":
+        tocarVarredura(500, 60, t, 0.9, "sawtooth", 0.4);
+        break;
+    }
+  } catch (erro) {
+    // ignora falhas de áudio
+  }
+}
+
+function musicaDeveTocar() {
+  return estado === "JOGANDO" || estado === "CONTAGEM";
+}
+
+function tocarPassoMusica(indice, quando) {
+  const f = MELODIA[indice];
+  if (f) tocarNota(f, quando, PASSO_MUSICA * 1.6, "square", 0.5, audio.musica);
+  if (indice % 4 === 0) tocarNota(BAIXO_MUSICA[(indice / 4) % BAIXO_MUSICA.length], quando, PASSO_MUSICA * 3.6, "triangle", 0.7, audio.musica);
+}
+
+function agendarMusica() {
+  try {
+    if (audio.ctx && musicaDeveTocar()) {
+      const agora = audio.ctx.currentTime;
+      if (audio.proximoTempo < agora) audio.proximoTempo = agora + 0.05;
+      while (audio.proximoTempo < agora + 0.2) {
+        tocarPassoMusica(audio.passo, audio.proximoTempo);
+        audio.passo = (audio.passo + 1) % MELODIA.length;
+        audio.proximoTempo += PASSO_MUSICA;
+      }
+    }
+  } catch (erro) {
+    // ignora falhas de áudio
+  }
+  audio.agendador = setTimeout(agendarMusica, 60);
+}
+
+// ===== SEÇÃO: desenho =====
+const cor = {
+  fundo: "#04040c", grade: "#0c0c1c", cobra: "#39ff88", cabeca: "#c8ffdc",
+  fruta: "#ff5470", brilho: "#ffd0d8", especial: "#ffd23f", olho: "#07110a"
+};
+const FONTE_TABULEIRO = '"Courier New", ui-monospace, Consolas, monospace';
+let tela = null;      // canvas
+let ctx2d = null;
+let ladoTabuleiro = 0;
+let celula = 0;
+
+function ajustarTabuleiro() {
+  const moldura = document.getElementById("moldura");
+  const disponivel = Math.min(moldura.clientWidth, moldura.clientHeight) - 8;
+  let lado = Math.floor(disponivel / COLUNAS) * COLUNAS;
+  if (lado < COLUNAS * 6) lado = COLUNAS * 6;
+  const dpr = window.devicePixelRatio || 1;
+  ladoTabuleiro = lado;
+  celula = lado / COLUNAS;
+  tela.width = Math.round(lado * dpr);
+  tela.height = Math.round(lado * dpr);
+  tela.style.width = lado + "px";
+  tela.style.height = lado + "px";
+  ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function retangulo(x, y, margem, cor1) {
+  ctx2d.fillStyle = cor1;
+  ctx2d.fillRect(x * celula + margem, y * celula + margem, celula - 2 * margem, celula - 2 * margem);
+}
+
+function desenhar() {
+  const c = ctx2d;
+  c.fillStyle = cor.fundo;
+  c.fillRect(0, 0, ladoTabuleiro, ladoTabuleiro);
+  c.fillStyle = cor.grade;
+  for (let y = 0; y < LINHAS; y++) {
+    for (let x = 0; x < COLUNAS; x++) {
+      if ((x + y) % 2 === 0) c.fillRect(x * celula, y * celula, celula, celula);
+    }
+  }
+  if (!partida) return;
+
+  const f = partida.fruta;
+  if (f) {
+    retangulo(f.x, f.y, celula * 0.15, cor.fruta);
+    c.fillStyle = cor.brilho;
+    c.fillRect(f.x * celula + celula * 0.28, f.y * celula + celula * 0.24, celula * 0.16, celula * 0.16);
+  }
+
+  const e = partida.especial;
+  if (e) {
+    const pulso = 0.08 + 0.05 * Math.sin(performance.now() / 160);
+    retangulo(e.x, e.y, celula * pulso, cor.especial);
+    c.fillStyle = "#3a2a00";
+    c.font = "bold " + Math.floor(celula * 0.8) + "px " + FONTE_TABULEIRO;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillText("?", e.x * celula + celula / 2, e.y * celula + celula / 2 + celula * 0.04);
+  }
+
+  let corpo = cor.cobra;
+  let alfa = 1;
+  if (temEfeito(partida, "Câmera lenta")) corpo = "#4dd2ff";
+  else if (temEfeito(partida, "Turbo")) corpo = "#ff9f43";
+  else if (temEfeito(partida, "Pontos em dobro")) corpo = "#ffd23f";
+  if (temEfeito(partida, "Atravessar o corpo")) alfa = 0.55;
+
+  c.globalAlpha = alfa;
+  for (let i = partida.cobra.length - 1; i >= 1; i--) {
+    const s = partida.cobra[i];
+    retangulo(s.x, s.y, celula * 0.06, corpo);
+  }
+  const h = partida.cobra[0];
+  retangulo(h.x, h.y, celula * 0.02, cor.cabeca);
+  c.globalAlpha = 1;
+
+  // olhos, virados para a direção do movimento
+  const dx = partida.dir.x, dy = partida.dir.y;
+  const cx = h.x * celula + celula / 2, cy = h.y * celula + celula / 2;
+  const px = -dy, py = dx;
+  c.fillStyle = cor.olho;
+  for (const lado of [-1, 1]) {
+    c.fillRect(cx + dx * celula * 0.18 + px * lado * celula * 0.2 - celula * 0.06,
+               cy + dy * celula * 0.18 + py * lado * celula * 0.2 - celula * 0.06,
+               celula * 0.12, celula * 0.12);
+  }
+
+  if (temEfeito(partida, "Escudo")) {
+    c.strokeStyle = "#4dd2ff";
+    c.lineWidth = Math.max(2, celula * 0.12);
+    c.strokeRect(h.x * celula - 2, h.y * celula - 2, celula + 4, celula + 4);
+  }
+}
+
+// ===== SEÇÃO: máquina de estados =====
+let estado = "TITULO";
+let partida = null;
+let sorteador = null;
+let bancoValido = [];
+let perguntaAtual = null;
+let ultimoResultado = null;
+let ranking = [];
+let acumulador = 0;
+let tempoPergunta = 0;
+let esperaResultado = 0;
+let contagem = 0;
+let ultimoQuadro = 0;
+let iniciaisPendentes = false;
+let destaqueRanking = null;
+let temporizadorAviso = null;
+const cacheHud = {};
+
+const TELA_DO_ESTADO = {
+  TITULO: "tela-titulo", PAUSADO: "tela-pausa", CONTAGEM: "tela-contagem", PERGUNTA: "tela-pergunta",
+  RESULTADO: "tela-resultado", FIM: "tela-fim", INICIAIS: "tela-fim", RANKING: "tela-ranking"
+};
+const FOCO_DA_TELA = {
+  TITULO: "btn-jogar", PAUSADO: "btn-continuar", RESULTADO: "btn-resultado", FIM: "btn-de-novo",
+  INICIAIS: "iniciais", RANKING: "btn-ranking-jogar"
+};
+
+function $(id) { return document.getElementById(id); }
+
+function mudarEstado(novo) {
+  estado = novo;
+  const alvo = TELA_DO_ESTADO[novo];
+  for (const id of new Set(Object.values(TELA_DO_ESTADO))) $(id).hidden = (id !== alvo);
+  $("btn-pausa").hidden = !(novo === "JOGANDO" || novo === "PAUSADO");
+  if (novo !== "JOGANDO") $("aviso").hidden = true;
+  const foco = FOCO_DA_TELA[novo];
+  if (foco) {
+    const el = $(foco);
+    if (el && !el.disabled) el.focus({ preventScroll: true });
+  }
+}
+
+function texto(tag, classe, conteudo) {
+  const el = document.createElement(tag);
+  if (classe) el.className = classe;
+  el.textContent = conteudo;
+  return el;
+}
+
+function mostrarAviso(mensagem, tipo) {
+  const el = $("aviso");
+  el.textContent = mensagem;
+  el.className = tipo || "";
+  el.hidden = false;
+  clearTimeout(temporizadorAviso);
+  temporizadorAviso = setTimeout(function () { el.hidden = true; }, 2000);
+}
+
+function descreverEfeito(e) {
+  if (!e) return "Nenhum";
+  if (e.nome === "Escudo") return e.nome + " · 1 uso";
+  return e.nome + " · " + Math.ceil(e.restante) + " s";
+}
+
+function atualizarHud() {
+  const p = partida;
+  const valores = {
+    "hud-pontos": String(p ? p.pontos : 0),
+    "hud-combo": "x" + (p ? multiplicador(p.sequencia) : 1),
+    "hud-tamanho": String(p ? p.cobra.length : TAMANHO_INICIAL),
+    "hud-efeito": p ? descreverEfeito(p.efeito) : "Nenhum"
+  };
+  for (const id in valores) {
+    if (cacheHud[id] !== valores[id]) { $(id).textContent = valores[id]; cacheHud[id] = valores[id]; }
+  }
+  const classe = p && p.efeito ? (p.efeito.tipo === "UPGRADE" ? "sobe" : "desce") : "";
+  if (cacheHud.classe !== classe) { $("hud-efeito").className = classe; cacheHud.classe = classe; }
+}
+
+function anunciarEfeitoAtual() {
+  const e = partida && partida.efeito;
+  if (!e) return;
+  tocarSom("efeito");
+  mostrarAviso((e.tipo === "UPGRADE" ? "▲ " : "▼ ") + e.nome, e.tipo === "UPGRADE" ? "sobe" : "desce");
+}
+
+function iniciarPartida() {
+  if (bancoValido.length === 0) return;
+  partida = criarPartida();
+  sorteador = criarSorteador(bancoValido);
+  acumulador = 0;
+  contagem = CONTAGEM_SEGUNDOS;
+  iniciarAudio();
+  mudarEstado("CONTAGEM");
+}
+
+function irParaMenu() {
+  partida = null;
+  mudarEstado("TITULO");
+}
+
+function pausar() {
+  if (estado === "JOGANDO") mudarEstado("PAUSADO");
+}
+
+function retomar() {
+  if (estado !== "PAUSADO") return;
+  contagem = CONTAGEM_SEGUNDOS;
+  mudarEstado("CONTAGEM");
+}
+
+function tratarEvento(ev) {
+  switch (ev.tipo) {
+    case "fruta": tocarSom("comer"); break;
+    case "especial": abrirPergunta(); break;
+    case "escudo": tocarSom("escudo"); mostrarAviso("Escudo usado!", "sobe"); break;
+    case "fim": terminarPartida(); break;
+  }
+}
+
+function abrirPergunta() {
+  const q = sorteador.proxima();
+  if (!q) return;
+  perguntaAtual = montarPergunta(q);
+  tempoPergunta = TEMPO_PERGUNTA;
+  $("pergunta-materia").textContent = perguntaAtual.m;
+  $("pergunta-enunciado").textContent = perguntaAtual.q;
+  const caixa = $("pergunta-alternativas");
+  caixa.textContent = "";
+  perguntaAtual.alternativas.forEach(function (alt, i) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "alt";
+    b.appendChild(texto("span", "", String(i + 1)));
+    b.appendChild(texto("div", "", alt));
+    b.addEventListener("click", function () { responder(i); });
+    caixa.appendChild(b);
+  });
+  atualizarCronometro();
+  tocarSom("especial");
+  mudarEstado("PERGUNTA");
+}
+
+function atualizarCronometro() {
+  const restante = Math.max(0, tempoPergunta);
+  $("pergunta-tempo").textContent = Math.ceil(restante) + " s";
+  const barra = $("cronometro-barra");
+  barra.style.width = (100 * restante / TEMPO_PERGUNTA) + "%";
+  barra.className = restante <= 5 ? "urgente" : "";
+}
+
+function responder(indice) {
+  if (estado !== "PERGUNTA") return;
+  const r = registrarResposta(partida, perguntaAtual, indice);
+  ultimoResultado = r;
+  const titulos = { CERTA: "Resposta correta!", ERRADA: "Resposta errada!", TEMPO: "Tempo esgotado!" };
+  const t = $("resultado-titulo");
+  t.textContent = titulos[r.resultado];
+  t.className = r.resultado.toLowerCase();
+  $("resultado-enunciado").textContent = perguntaAtual.q;
+  const caixa = $("resultado-alternativas");
+  caixa.textContent = "";
+  perguntaAtual.alternativas.forEach(function (alt, i) {
+    const b = document.createElement("div");
+    b.className = "alt parada";
+    let marca = String(i + 1);
+    if (i === perguntaAtual.correta) { b.className += " certa"; marca = "✔"; }
+    else if (i === indice) { b.className += " errada"; marca = "✘"; }
+    b.appendChild(texto("span", "", marca));
+    b.appendChild(texto("div", "", alt));
+    caixa.appendChild(b);
+  });
+  $("resultado-explicacao").textContent = "Explicação: " + perguntaAtual.e;
+  $("resultado-pontos").textContent = r.resultado === "CERTA" ? "+" + r.bonus + " pontos" : "Combo zerado";
+  const ef = $("resultado-efeito");
+  const sobe = r.resultado === "CERTA";
+  ef.textContent = (sobe ? "Recompensa: ▲ " : "Penalidade: ▼ ") + r.efeito + (sobe ? "" : " (a cobra acelera)");
+  ef.className = sobe ? "sobe" : "desce";
+  tocarSom(sobe ? "certa" : "errada");
+  esperaResultado = ESPERA_RESULTADO;
+  $("btn-resultado").disabled = true;
+  mudarEstado("RESULTADO");
+}
+
+function continuarDoResultado() {
+  if (estado !== "RESULTADO" || esperaResultado > 0) return;
+  contagem = CONTAGEM_SEGUNDOS;
+  mudarEstado("CONTAGEM");
+}
+
+function terminarPartida() {
+  tocarSom("fim");
+  const p = partida;
+  $("fim-titulo").textContent = p.ganhou ? "Você venceu!" : "Fim de jogo";
+  $("fim-pontos").textContent = String(p.pontos);
+  $("fim-tamanho").textContent = String(p.cobra.length);
+
+  const lista = $("revisao-lista");
+  lista.textContent = "";
+  const erradas = p.registros.filter(function (r) { return r.resultado !== "CERTA"; });
+  if (p.registros.length === 0) {
+    lista.appendChild(texto("p", "suave", "Nenhuma pergunta respondida nesta partida."));
+  } else if (erradas.length === 0) {
+    lista.appendChild(texto("p", "destaque", "Você acertou todas as perguntas!"));
+  } else {
+    for (const r of erradas) {
+      const item = document.createElement("div");
+      item.className = "rev-item";
+      item.appendChild(texto("p", "", r.enunciado));
+      item.appendChild(texto("p", "", (r.textoEscolhido === null ? "Tempo esgotado. " : "Sua resposta: " + r.textoEscolhido + ". ") + "Correta: " + r.textoCorreto));
+      item.appendChild(texto("p", "suave", r.explicacao));
+      lista.appendChild(item);
+    }
+  }
+
+  ranking = carregarRanking();
+  iniciaisPendentes = armazenamentoOk && qualifica(p.pontos, ranking);
+  $("msg-armazenamento").hidden = armazenamentoOk;
+  $("bloco-iniciais").hidden = !iniciaisPendentes;
+  $("bloco-fim-botoes").hidden = iniciaisPendentes;
+  $("iniciais").value = "";
+  $("btn-salvar").disabled = true;
+  mudarEstado(iniciaisPendentes ? "INICIAIS" : "FIM");
+}
+
+function salvarIniciais() {
+  if (estado !== "INICIAIS") return;
+  const iniciais = $("iniciais").value;
+  if (!/^[A-Z]{3}$/.test(iniciais)) return;
+  const entrada = { i: iniciais, p: partida.pontos, t: Date.now() };
+  const nova = inserirNoRanking(ranking, entrada);
+  if (salvarRanking(nova)) {
+    ranking = nova;
+    destaqueRanking = entrada.t;
+    mostrarRanking();
+  } else {
+    iniciaisPendentes = false;
+    $("bloco-iniciais").hidden = true;
+    $("bloco-fim-botoes").hidden = false;
+    $("msg-armazenamento").hidden = false;
+    mudarEstado("FIM");
+  }
+}
+
+function pularIniciais() {
+  if (estado !== "INICIAIS") return;
+  iniciaisPendentes = false;
+  $("bloco-iniciais").hidden = true;
+  $("bloco-fim-botoes").hidden = false;
+  mudarEstado("FIM");
+}
+
+function mostrarRanking() {
+  if (estado !== "INICIAIS" || !iniciaisPendentes) ranking = carregarRanking();
+  const lista = $("ranking-lista");
+  lista.textContent = "";
+  ranking.forEach(function (e, i) {
+    const li = document.createElement("li");
+    if (e.t === destaqueRanking) li.className = "novo";
+    li.appendChild(texto("span", "", (i + 1) + ". " + e.i));
+    li.appendChild(texto("span", "", String(e.p)));
+    lista.appendChild(li);
+  });
+  $("ranking-vazio").hidden = ranking.length > 0 || !armazenamentoOk;
+  $("ranking-msg").hidden = armazenamentoOk;
+  $("btn-ranking-jogar").disabled = bancoValido.length === 0;
+  mudarEstado("RANKING");
+  destaqueRanking = null;
+}
+
+function atualizar(dt) {
+  if (estado === "JOGANDO") {
+    const d = deltaDeJogo(estado, dt);
+    avancarEfeito(partida, d);
+    acumulador += d;
+    let guarda = 0;
+    while (estado === "JOGANDO" && guarda++ < 5) {
+      const intervalo = 1 / velocidadeAtual(partida);
+      if (acumulador < intervalo) break;
+      acumulador -= intervalo;
+      tratarEvento(passo(partida));
+    }
+  } else if (estado === "PERGUNTA") {
+    tempoPergunta -= dt;
+    atualizarCronometro();
+    if (tempoPergunta <= 0) responder(null);
+  } else if (estado === "RESULTADO") {
+    if (esperaResultado > 0) {
+      esperaResultado = Math.max(0, esperaResultado - dt);
+      if (esperaResultado === 0) {
+        const b = $("btn-resultado");
+        b.disabled = false;
+        b.focus({ preventScroll: true });
+      }
+    }
+  } else if (estado === "CONTAGEM") {
+    contagem -= dt;
+    $("contagem-numero").textContent = String(Math.max(1, Math.ceil(contagem)));
+    if (contagem <= 0) {
+      acumulador = 0;
+      mudarEstado("JOGANDO");
+      anunciarEfeitoAtual();
+    }
+  }
+}
+
+function quadro(t) {
+  if (!ultimoQuadro) ultimoQuadro = t;
+  const dt = Math.min((t - ultimoQuadro) / 1000, 0.1);
+  ultimoQuadro = t;
+  atualizar(dt);
+  desenhar();
+  atualizarHud();
+  requestAnimationFrame(quadro);
+}
+
+// ===== SEÇÃO: entrada =====
+const TECLAS_DIRECAO = {
+  ArrowUp: DIRECOES.CIMA, ArrowDown: DIRECOES.BAIXO, ArrowLeft: DIRECOES.ESQUERDA, ArrowRight: DIRECOES.DIREITA,
+  w: DIRECOES.CIMA, W: DIRECOES.CIMA, s: DIRECOES.BAIXO, S: DIRECOES.BAIXO,
+  a: DIRECOES.ESQUERDA, A: DIRECOES.ESQUERDA, d: DIRECOES.DIREITA, D: DIRECOES.DIREITA
+};
+
+function ativarPrimario() {
+  switch (estado) {
+    case "TITULO": iniciarPartida(); break;
+    case "PAUSADO": retomar(); break;
+    case "RESULTADO": continuarDoResultado(); break;
+    case "FIM": iniciarPartida(); break;
+    case "RANKING": iniciarPartida(); break;
+  }
+}
+
+function aoTeclar(e) {
+  if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (estado === "INICIAIS") return;
+  const k = e.key;
+  if (k === "m" || k === "M") {
+    if (!e.repeat) alternarMudo();
+    e.preventDefault();
+    return;
+  }
+  const pausaTecla = (k === "p" || k === "P" || k === "Escape");
+  switch (estado) {
+    case "JOGANDO": {
+      const d = TECLAS_DIRECAO[k];
+      if (d) { pedirDirecao(partida, d); e.preventDefault(); }
+      else if (pausaTecla && !e.repeat) { pausar(); e.preventDefault(); }
+      break;
+    }
+    case "PAUSADO":
+      if (pausaTecla && !e.repeat) { retomar(); e.preventDefault(); }
+      break;
+    case "PERGUNTA":
+      // só 1 a 4 respondem; P e Esc não pulam a pergunta
+      if (k >= "1" && k <= "4" && !e.repeat) { responder(Number(k) - 1); }
+      e.preventDefault();
+      break;
+    default:
+      if ((k === "Enter" || k === " ") && !(e.target instanceof HTMLButtonElement)) {
+        ativarPrimario();
+        e.preventDefault();
+      }
+  }
+}
+
+function ligarEntrada() {
+  document.addEventListener("keydown", aoTeclar);
+
+  // o áudio só pode começar depois de um gesto do jogador
+  const primeiroGesto = function () {
+    iniciarAudio();
+    document.removeEventListener("pointerdown", primeiroGesto, true);
+    document.removeEventListener("keydown", primeiroGesto, true);
+  };
+  document.addEventListener("pointerdown", primeiroGesto, true);
+  document.addEventListener("keydown", primeiroGesto, true);
+
+  // deslizar sobre o tabuleiro
+  const moldura = $("moldura");
+  let origem = null;
+  moldura.addEventListener("touchstart", function (e) {
+    const t = e.changedTouches[0];
+    origem = { x: t.clientX, y: t.clientY };
+  }, { passive: true });
+  moldura.addEventListener("touchmove", function (e) {
+    e.preventDefault();
+    if (!origem || estado !== "JOGANDO") return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - origem.x, dy = t.clientY - origem.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < LIMIAR_DESLIZE) return;
+    const dir = Math.abs(dx) > Math.abs(dy)
+      ? (dx > 0 ? DIRECOES.DIREITA : DIRECOES.ESQUERDA)
+      : (dy > 0 ? DIRECOES.BAIXO : DIRECOES.CIMA);
+    pedirDirecao(partida, dir);
+    origem = { x: t.clientX, y: t.clientY };
+  }, { passive: false });
+  moldura.addEventListener("touchend", function () { origem = null; }, { passive: true });
+
+  // botões de direção na tela
+  document.querySelectorAll(".dir").forEach(function (b) {
+    b.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      if (estado === "JOGANDO") pedirDirecao(partida, DIRECOES[b.dataset.dir]);
+    });
+  });
+
+  $("btn-som").addEventListener("click", alternarMudo);
+  $("btn-pausa").addEventListener("click", function () { if (estado === "JOGANDO") pausar(); else retomar(); });
+  $("btn-jogar").addEventListener("click", iniciarPartida);
+  $("btn-ranking").addEventListener("click", mostrarRanking);
+  $("btn-continuar").addEventListener("click", retomar);
+  $("btn-pausa-menu").addEventListener("click", irParaMenu);
+  $("btn-resultado").addEventListener("click", continuarDoResultado);
+  $("btn-de-novo").addEventListener("click", iniciarPartida);
+  $("btn-fim-ranking").addEventListener("click", mostrarRanking);
+  $("btn-fim-menu").addEventListener("click", irParaMenu);
+  $("btn-ranking-jogar").addEventListener("click", iniciarPartida);
+  $("btn-ranking-menu").addEventListener("click", irParaMenu);
+  $("btn-salvar").addEventListener("click", salvarIniciais);
+  $("btn-pular").addEventListener("click", pularIniciais);
+
+  const campo = $("iniciais");
+  campo.addEventListener("input", function () {
+    campo.value = campo.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
+    $("btn-salvar").disabled = campo.value.length !== 3;
+  });
+  campo.addEventListener("keydown", function (e) {
+    // o mesmo Enter não pode chegar ao tratador global, que já veria a tela do ranking
+    e.stopPropagation();
+    if (e.key === "Enter" && campo.value.length === 3) { e.preventDefault(); salvarIniciais(); }
+  });
+
+  // pausa automática ao sair da página
+  document.addEventListener("visibilitychange", function () { if (document.hidden) pausar(); });
+  window.addEventListener("blur", pausar);
+  window.addEventListener("resize", ajustarTabuleiro);
+  window.addEventListener("orientationchange", function () { setTimeout(ajustarTabuleiro, 150); });
+}
+
+// ===== SEÇÃO: início =====
+function iniciar() {
+  tela = $("tabuleiro");
+  ctx2d = tela.getContext("2d");
+  if ("ontouchstart" in window || (window.matchMedia && matchMedia("(pointer: coarse)").matches)) {
+    document.body.classList.add("toque");
+    $("titulo-teclas").hidden = true;
+    $("titulo-toque").hidden = false;
+  }
+  $("versao").textContent = "v" + VERSAO;
+  $("titulo-versao").textContent = "v" + VERSAO;
+
+  armazenamentoOk = testarArmazenamento();
+  mudo = carregarMudo();
+  ranking = carregarRanking();
+
+  const banco = prepararBanco(typeof PERGUNTAS === "undefined" ? null : PERGUNTAS);
+  bancoValido = banco.validas;
+  if (banco.ignoradas.length) console.warn("Perguntas ignoradas (posições no arquivo):", banco.ignoradas.join(", "));
+  const semPerguntas = bancoValido.length === 0 || window.perguntasFalhou === true;
+  if (window.perguntasFalhou === true) bancoValido = [];
+  $("titulo-aviso").hidden = !semPerguntas;
+  $("btn-jogar").disabled = semPerguntas;
+
+  aplicarMudo();
+  ligarEntrada();
+  ajustarTabuleiro();
+  mudarEstado("TITULO");
+  requestAnimationFrame(quadro);
+}
+
+function iniciarTestes() {
+  const r = executarTestes();
+  const painel = document.createElement("pre");
+  painel.style.cssText = "position:fixed;inset:0;margin:0;padding:16px;overflow:auto;background:#07070f;color:#e8ffe8;z-index:99;font:14px/1.4 monospace;-webkit-user-select:text;user-select:text";
+  painel.textContent = "Snake v" + VERSAO + " — testes da lógica\n\n" + r.linhas.join("\n");
+  document.body.appendChild(painel);
+}
+
+if (location.hash === "#teste") iniciarTestes(); else iniciar();
+</script>
+</body>
+</html>
