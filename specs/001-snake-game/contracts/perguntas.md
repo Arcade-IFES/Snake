@@ -23,7 +23,7 @@ limits from the spec.
 | Field | Meaning | Rules |
 |-------|---------|-------|
 | `q` | Statement | Non-empty text, at most 160 characters |
-| `a` | Alternatives | At least 4 non-empty texts, each at most 40 characters; the first is always correct; the game shuffles and shows four |
+| `a` | Alternatives | At least 4 non-empty texts, each at most 40 characters, no two equal; the first is always correct; the game shuffles and shows four |
 | `e` | Explanation | Non-empty short text shown after answering |
 | `m` | Subject | Non-empty text used for balanced drawing |
 

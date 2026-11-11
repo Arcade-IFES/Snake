@@ -1,0 +1,57 @@
+name: Documentação
+
+# Gera o site do MkDocs (mkdocs.yml + docs/) e publica no GitHub Pages.
+# Nas configurações do repositório, em Pages, a origem precisa ser "GitHub Actions".
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Só uma publicação por vez; a mais nova substitui a que ainda está na fila.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Preparar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar o MkDocs
+        run: pip install mkdocs-material
+
+      - name: Gerar o site
+        run: mkdocs build
+
+      - name: Enviar o site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  publicar:
+    needs: gerar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Publicar no GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

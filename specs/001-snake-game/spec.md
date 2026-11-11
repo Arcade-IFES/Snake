@@ -210,8 +210,8 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
    resumes after a short 3-2-1 countdown.
 3. **Given** the game is paused, **When** time passes, **Then** the snake, the effect timers, and the
    question timer (if any) do not advance.
-4. **Given** the browser tab loses focus or becomes hidden during a match, **When** that happens, **Then** the
-   game pauses automatically.
+4. **Given** the browser tab loses focus or becomes hidden during a match, including the 3-2-1 countdown,
+   **When** that happens, **Then** the game pauses automatically.
 5. **Given** the question screen is open, **When** the player presses P or Esc, **Then** nothing happens: a
    question cannot be skipped by pausing.
 
@@ -223,7 +223,8 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
   Verifique o arquivo perguntas.js.") and "Jogar" is disabled; the game must not crash.
 - **Question bank smaller than a match needs**: when every question has been used in the match, the drawing
   restarts from the full bank with the same balanced-subject rule.
-- **Malformed question entry** (missing statement, fewer than four alternatives, or no explanation): the game
+- **Malformed question entry** (missing statement, fewer than four alternatives, repeated alternatives, or no
+  explanation): the game
   skips it and continues with the valid ones; if none are valid, it behaves as an empty bank.
 - **Fewer than four alternatives is never shown**: a question is only used if it has at least four
   alternatives, and exactly four are shown (the correct one plus three others, chosen randomly and shuffled).
@@ -250,7 +251,8 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
 - **Ranking is full**: a qualifying score replaces the 10th entry, which is dropped.
 - **Initials**: only letters A to Z are accepted, converted to upper case; confirming with fewer than three
   letters is not possible; the player can skip saving with "Pular".
-- **Sound cannot start** (blocked audio): the game continues silently and retries on the next interaction.
+- **Sound cannot start** (blocked audio): the game continues silently and retries on the first interaction
+  and again at the start of each match.
 - **Very small screens**: below the smallest supported size, the game shows "Gire o aparelho ou aumente a
   janela." instead of an unplayable layout.
 
@@ -288,7 +290,7 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
 - **FR-013**: P or Esc MUST pause and resume a match; phones MUST also offer an on-screen pause button. The
   same "Pausar" button is also shown on desktop.
 - **FR-014**: The game MUST pause automatically when the page loses focus or becomes hidden during a match,
-  and MUST resume only through the pause screen.
+  including the 3-2-1 countdown, and MUST resume only through the pause screen.
 - **FR-015**: Resuming from pause and from a question result MUST be followed by a 3-2-1 countdown before the
   snake moves again. The same countdown is also shown before the first move of a new match.
 - **FR-016**: On touch devices, swiping on the play area MUST NOT scroll or zoom the page.
@@ -296,7 +298,8 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
 **Question round**
 
 - **FR-017**: After every 5th regular fruit eaten, a special "?" fruit MUST appear on a random free cell; only
-  one "?" fruit MUST exist at a time, and it MUST stay on the grid until eaten.
+  one "?" fruit MUST exist at a time, and it MUST stay on the grid until eaten. The count of 5 restarts when
+  the "?" fruit appears; regular fruits eaten while it is on the grid do not count toward the next one.
 - **FR-018**: Eating the "?" fruit MUST stop the snake and all timers and show one question with the
   statement, four alternatives in random order, and a visible 15-second countdown. The "?" fruit MUST NOT
   grow the snake and MUST NOT award fruit points.
@@ -343,8 +346,8 @@ The player can pause a running match with P or Esc (or the on-screen pause butto
   length ("Tamanho"), the active effect with its remaining time or "1 uso" ("Efeito"), and the game version.
 - **FR-037**: The game MUST show the version in the semantic format "vMAJOR.MINOR.PATCH" (initial release
   "v1.0.0").
-- **FR-038**: Each effect start MUST be announced on screen with its name, and effect type (upgrade or
-  downgrade) MUST be visually distinct.
+- **FR-038**: Each effect start MUST be announced on screen with its name, once; resuming from pause MUST NOT
+  repeat the announcement. Effect type (upgrade or downgrade) MUST be visually distinct.
 
 **End of match and ranking**
 

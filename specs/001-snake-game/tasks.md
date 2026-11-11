@@ -236,8 +236,8 @@ independent of the `index.html` tasks below.
   `PERGUNTA`
 - [X] T043 [US7] Add `visibilitychange` and `blur` handling to `index.html` so a match in `JOGANDO` pauses
   automatically and resumes only through the pause screen
-- [X] T044 [US7] Add an on-screen pause button to `index.html`, shown on touch devices during play, that
-  toggles pause like P
+- [X] T044 [US7] Add an on-screen "Pausar" button to `index.html`, shown on every device during play (FR-013),
+  that toggles pause like P
 
 **Checkpoint**: Pause freezes the snake and all timers.
 
@@ -249,8 +249,9 @@ independent of the `index.html` tasks below.
 
 **Independent Test**: Quickstart scenario G (the pause button part depends on Phase 6).
 
-- [X] T045 [US6] Add swipe steering to the entrada section of `index.html`: `touchstart` and `touchend` on the
-  board, dominant axis, ignore moves under 24 px, then call `pedirDirecao`
+- [X] T045 [US6] Add swipe steering to the entrada section of `index.html`: `touchstart` and `touchmove` on the
+  board, dominant axis, ignore moves under 24 px, then call `pedirDirecao` (one turn per 24 px, so one swipe
+  can turn more than once)
 - [X] T046 [US6] Add `touch-action: none` on the board and scroll/zoom prevention to `index.html` so swiping
   never scrolls or zooms the page (FR-016)
 - [X] T047 [US6] Add on-screen direction buttons to `index.html` using `pointerdown`, shown on touch devices
@@ -351,6 +352,39 @@ independent of the `index.html` tasks below.
 
 ---
 
+## Phase 11: Convergence
+
+- [X] T068 Play the sound effect `"efeito"` (already defined in `tocarSom`) in `index.html` every time an upgrade or the "Turbo" downgrade starts, for example inside `anunciarEfeitoAtual()`, so the effect-start sound required by FR-047 is heard per FR-047 (partial)
+- [X] T069 Resolve the 3-2-1 countdown shown before the first move of a new match in `iniciarPartida()` of `index.html`: spec.md only asks for the countdown after pause and after a question result (FR-015), so either document it in spec.md and README.md or remove it per FR-002 and FR-015 (unrequested)
+- [X] T070 Resolve the "Pausar" button that `index.html` shows on desktop as well as on phones: S-III and T044 only require it on phones, so either hide it when `body.toque` is not set or note the desktop button in spec.md and README.md per Constitution S-III (unrequested)
+
+---
+
+## Phase 12: Spec-Kit + Caveman review
+
+**Purpose**: Apply the findings of the Caveman review of spec.md, plan.md, tasks.md, and the code
+(`docs/revisao-ciclo-speckit.md`, `docs/aplicacao-no-projeto.md`).
+
+**Note**: the self-tests for answer handling, "Escudo", "Atravessar o corpo", and "Pontos em dobro" already
+exist in `index.html` (added with T026 and T031) but were not listed in this file. They are listed here so the
+task list matches the code.
+
+- [X] T071 [US7] Pause automatically in `index.html` also during the 3-2-1 countdown: `pausar()` accepts
+  `CONTAGEM` as well as `JOGANDO` (FR-014, US7 scenario 4)
+- [X] T072 [US3] Announce each effect only once in `index.html`: `anunciarEfeitoAtual()` marks the effect as
+  announced, so resuming from pause does not repeat the message and the sound (FR-038)
+- [X] T073 [US2] Add the self-test "colisão vence a ? no mesmo movimento" to `index.html` (edge case
+  "Simultaneous events")
+- [X] T074 [US2] Document in spec.md, `contracts/perguntas.md`, and `README.md` that repeated alternatives make
+  a question invalid, as `validarPergunta` already does
+- [X] T075 [US2] Clarify in spec.md when the count of 5 fruits for the "?" fruit restarts (FR-017) and when
+  blocked audio retries (edge case "Sound cannot start")
+- [X] T076 Align T044, T045, and plan.md with the code: "Pausar" button on every device (FR-013), swipe read
+  on `touchmove`
+- [X] T077 Open `index.html#teste` and confirm every check reports "ok" (28 checks)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -431,9 +465,3 @@ Join: T035 needs at least the shipped questions from Stream B to run a real ques
 - Commit after each task or logical group, on branch `001-snake-game`.
 - Stop at any checkpoint to validate the story on its own.
 - Do not add frameworks, build steps, external fonts, or audio files: the constitution forbids them.
-
-## Phase 11: Convergence
-
-- [X] T068 Play the sound effect `"efeito"` (already defined in `tocarSom`) in `index.html` every time an upgrade or the "Turbo" downgrade starts, for example inside `anunciarEfeitoAtual()`, so the effect-start sound required by FR-047 is heard per FR-047 (partial)
-- [X] T069 Resolve the 3-2-1 countdown shown before the first move of a new match in `iniciarPartida()` of `index.html`: spec.md only asks for the countdown after pause and after a question result (FR-015), so either document it in spec.md and README.md or remove it per FR-002 and FR-015 (unrequested)
-- [X] T070 Resolve the "Pausar" button that `index.html` shows on desktop as well as on phones: S-III and T044 only require it on phones, so either hide it when `body.toque` is not set or note the desktop button in spec.md and README.md per Constitution S-III (unrequested)

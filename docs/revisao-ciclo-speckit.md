@@ -32,6 +32,8 @@ Liste tasks faltantes, fora de escopo, sem teste ou em ordem errada.
 
 **Sem teste**
 
+> **Correção (aplicação no projeto):** esta lista comparou só o texto do `tasks.md`. Ao abrir o código, os self-tests de T035, T031 e FR-027 já existiam em `index.html` ("resposta errada e tempo esgotado…", "resposta certa dá bônus…", "atravessar o corpo…", "escudo cancela…", "pontos usam o combo e o efeito em dobro"). O defeito real era o `tasks.md` não registrá-los. Só o teste de T030 faltava de fato. Ver `docs/aplicacao-no-projeto.md`.
+
 - T035 (tratamento da resposta): nenhum self-test cobre bônus de 50 sem combo (FR-034), combo zerado no erro, "Turbo" aplicado e "nunca encerra a partida" (FR-022). A T026 testa só a ordem do ciclo e o teto de velocidade.
 - T030 ("?" e colisão no mesmo passo, a colisão vence): sem teste.
 - T031: "Escudo" (anula uma batida, cobra parada no tick) e "Atravessar o corpo" expirando sobre o corpo: sem teste. São as duas regras mais fáceis de quebrar.
@@ -47,7 +49,7 @@ Liste tasks faltantes, fora de escopo, sem teste ou em ordem errada.
 
 | Achado | Decisão |
 |--------|---------|
-| Self-tests de T035, T030, T031 e FR-027 | **Aceito.** Criar uma task nova de testes antes do próximo merge. São regras do núcleo educativo e hoje só têm teste manual. |
+| Self-tests de T035, T030, T031 e FR-027 | **Aceito em parte.** Só o teste de T030 faltava; foi criado (T073). Os outros já existiam e foram registrados no `tasks.md`. |
 | T044 e `plan.md` com o texto antigo do botão de pausa | **Aceito.** Corrigir o texto para bater com FR-013. |
 | T045 `touchend` contra `touchmove` | **Aceito.** Atualizar a task para descrever o código, que atende FR-012. |
 | Phase 11 fora do lugar | **Aceito.** Mover para antes de "Dependencies" e marcar a dependência com Phase 10. |

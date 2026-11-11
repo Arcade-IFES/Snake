@@ -1,0 +1,22 @@
+site_name: Snake — Arcade IFES
+site_description: Jogo arcade educativo feito com Spec-Kit, e o guia de uso do Spec-Kit com Caveman
+repo_url: https://github.com/Arcade-IFES/Snake
+docs_dir: docs
+theme:
+  name: material
+  language: pt-BR
+nav:
+  - Início: index.md
+  - Guia Spec-Kit + Caveman do Grupo: guia-speckit-caveman.md
+  - Aplicação no projeto: aplicacao-no-projeto.md
+  - Exercícios da aula 12:
+      - "Tarefa 1 — Diagnóstico de verbosidade": diagnostico-verbosidade.md
+      - "Tarefa 2 — Reescrita em três níveis": reescrita-tres-niveis.md
+      - "Tarefa 3 — Revisão do ciclo Spec-Kit": revisao-ciclo-speckit.md
+      - "Tarefa 5 — Aplicação no fluxo da feature": relatorio-fluxo-feature.md
+  - Referência:
+      - Comandos do Spec-Kit: COMMANDS.md
+      - Guia da constituição: CONSTITUTION-GUIDE.md
+markdown_extensions:
+  - tables
+  - admonition

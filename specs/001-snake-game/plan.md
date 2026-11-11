@@ -119,8 +119,8 @@ around the canvas, which keeps text crisp and accessible; the question and resul
 with large tap targets.
 
 **Input**: keyboard (`keydown`) for arrows, WASD, 1-4, P, Esc, M, Enter, Space; touch through `touchstart` and
-`touchend` on the board with a 24 px swipe threshold and `touch-action: none` so the page never scrolls or
-zooms; on-screen direction buttons and a pause button shown on touch devices. A two-slot direction queue
+`touchmove` on the board with a 24 px swipe threshold and `touch-action: none` so the page never scrolls or
+zooms; on-screen direction buttons on touch devices, and a pause button on every device during play. A two-slot direction queue
 applies one change per tick (FR-006).
 
 **Audio**: one lazily created `AudioContext`, resumed on the first user gesture. Effects are short oscillator

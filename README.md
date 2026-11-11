@@ -73,7 +73,7 @@ pergunta tem este formato:
 ```
 
 - `q`: o enunciado, com no máximo 160 caracteres.
-- `a`: as alternativas, com pelo menos 4 itens de até 40 caracteres cada. **A primeira é sempre a correta**:
+- `a`: as alternativas, com pelo menos 4 itens diferentes entre si, de até 40 caracteres cada. **A primeira é sempre a correta**:
   o jogo embaralha ao mostrar. Se houver mais de 4, o jogo sorteia 3 erradas.
 - `e`: uma explicação curta, mostrada depois da resposta.
 - `m`: o tópico. O jogo alterna entre os tópicos e não repete uma pergunta até usar todas.

@@ -942,6 +942,21 @@ testar("comer a ? não cresce nem pontua", function () {
   afirmar(ev.tipo === "especial" && p.cobra.length === 3 && p.pontos === 0 && p.especial === null, "só abre a pergunta");
 });
 
+testar("colisão vence a ? no mesmo movimento", function () {
+  const p = partidaSemFruta();
+  p.cobra = [{ x: COLUNAS - 1, y: 5 }, { x: COLUNAS - 2, y: 5 }, { x: COLUNAS - 3, y: 5 }];
+  p.especial = { x: COLUNAS - 1, y: 4 };
+  pedirDirecao(p, DIRECOES.CIMA);
+  afirmar(passo(p).tipo === "especial", "entrou na ? sem bater");
+  const q = partidaSemFruta();
+  q.cobra = [{ x: 5, y: 5 }, { x: 5, y: 6 }, { x: 4, y: 6 }, { x: 4, y: 5 }, { x: 4, y: 4 }, { x: 5, y: 4 }];
+  q.dir = DIRECOES.CIMA;
+  q.especial = { x: 4, y: 5 };
+  pedirDirecao(q, DIRECOES.ESQUERDA);
+  const ev = passo(q);
+  afirmar(ev.tipo === "fim" && q.fim && q.especial !== null, "a batida no corpo encerra antes da pergunta");
+});
+
 testar("ciclo de upgrades em ordem por 8 respostas certas", function () {
   const p = criarPartida();
   const esperado = ["Câmera lenta", "Atravessar o corpo", "Pontos em dobro", "Escudo"];
@@ -1478,7 +1493,9 @@ function atualizarHud() {
 
 function anunciarEfeitoAtual() {
   const e = partida && partida.efeito;
-  if (!e) return;
+  // cada efeito é anunciado uma vez só; voltar da pausa não repete o aviso
+  if (!e || e.anunciado) return;
+  e.anunciado = true;
   tocarSom("efeito");
   mostrarAviso((e.tipo === "UPGRADE" ? "▲ " : "▼ ") + e.nome, e.tipo === "UPGRADE" ? "sobe" : "desce");
 }
@@ -1498,8 +1515,9 @@ function irParaMenu() {
   mudarEstado("TITULO");
 }
 
+// a contagem 3-2-1 também é partida: sair da janela nela não pode deixar a cobra andar sozinha
 function pausar() {
-  if (estado === "JOGANDO") mudarEstado("PAUSADO");
+  if (estado === "JOGANDO" || estado === "CONTAGEM") mudarEstado("PAUSADO");
 }
 
 function retomar() {

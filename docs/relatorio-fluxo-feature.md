@@ -10,21 +10,21 @@
 
 **Plano:** um `index.html` (CSS e JS inline) + `perguntas.js`, abertos por duplo-clique (`file://`), sem build e sem dependências. Máquina com 9 estados; só `JOGANDO` avança o tempo. Loop de passo fixo com teto em `limitarVelocidade`. Som sintetizado com Web Audio. Ranking e mudo no `localStorage`, com try/catch. Release por tag `v*.*.*` conferida contra `VERSAO`. Sem desvios da constituição.
 
-**Tasks:** 70 tasks, 69 feitas. Faltam self-tests para a resposta da pergunta (bônus, combo, "Turbo", nunca encerra), para a colisão que vence a "?", para "Escudo", "Atravessar o corpo" e "Pontos em dobro". T044, T045 e `plan.md` estão com texto antigo (botão de pausa só no toque; `touchend`). A Phase 11 está fora do lugar. T066 está aberta: som (F), celular real (G) e release (J).
+**Tasks:** 70 tasks, 69 feitas. O `tasks.md` não registra os self-tests de resposta, "Escudo", "Atravessar o corpo" e "Pontos em dobro", que já existem no código (corrigido depois; a primeira revisão disse que faltavam). Falta de fato o teste da colisão que vence a "?". T044, T045 e `plan.md` estão com texto antigo (botão de pausa só no toque; `touchend`). A Phase 11 está fora do lugar. T066 está aberta: som (F), celular real (G) e release (J).
 
 **Implementação:** dois bugs. `index.html:1501`: `pausar()` ignora o `blur` durante a contagem 3-2-1. `index.html:1701`: o aviso do efeito repete a cada retomada da pausa. Uma regra inventada: `index.html:637` rejeita alternativas repetidas. Duas ambiguidades da spec: o contador da "?" (`index.html:576`) e quando o áudio tenta de novo (`index.html:1770`).
 
-**Riscos:** merge sem a T066 deixa som e celular real sem validação, e a constituição exige os dois. As regras do núcleo educativo só têm teste manual, então uma mudança pode quebrá-las sem aviso. O jogo pode começar a andar com a janela sem foco.
+**Riscos:** merge sem a T066 deixa som e celular real sem validação, e a constituição exige os dois. O `tasks.md` fora de sincronia com o código esconde o que já está testado. O jogo pode começar a andar com a janela sem foco.
 
 **Próximo passo:**
 1. Corrigir os dois bugs.
-2. Adicionar os self-tests que faltam e rodar `index.html#teste` até tudo dar "ok".
+2. Adicionar o teste da colisão que vence a "?", registrar os testes existentes no `tasks.md` e rodar `index.html#teste` até tudo dar "ok".
 3. Atualizar T044, T045, `plan.md` e `contracts/perguntas.md`, e rodar `/speckit-clarify` para o contador da "?".
 4. Fechar a T066 (som, celular real, release) e só então abrir o merge.
 
 ## Checklist para validar `/speckit.implement`
 
-- [ ] `index.html#teste`: todas as linhas "ok", incluindo os testes novos de resposta, escudo, atravessar o corpo e pontos em dobro
+- [ ] `index.html#teste`: todas as linhas "ok", incluindo resposta, escudo, atravessar o corpo, pontos em dobro e colisão contra a "?"
 - [ ] Partida completa no desktop, com teclado, incluindo uma pergunta certa, uma errada e uma por tempo
 - [ ] Partida completa num celular real, só com toque, em retrato e paisagem
 - [ ] Erro e tempo esgotado nunca encerram a partida e sempre mostram a resposta certa com a explicação
